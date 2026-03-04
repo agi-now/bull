@@ -1,0 +1,225 @@
+package graph
+
+import (
+	"encoding/json"
+	"fmt"
+	"os"
+	"path/filepath"
+
+	"github.com/bull-cli/bull/internal/config"
+	gr "github.com/dominikbraun/graph"
+)
+
+type graphData struct {
+	Directed bool                `json:"directed"`
+	Vertices []vertexData        `json:"vertices"`
+	Edges    []edgeData          `json:"edges"`
+}
+
+type vertexData struct {
+	ID    string            `json:"id"`
+	Attrs map[string]string `json:"attrs,omitempty"`
+}
+
+type edgeData struct {
+	From   string            `json:"from"`
+	To     string            `json:"to"`
+	Weight int               `json:"weight,omitempty"`
+	Attrs  map[string]string `json:"attrs,omitempty"`
+}
+
+func dbPath(name string) string {
+	return filepath.Join(config.GraphDir(), name+".json")
+}
+
+func Load(name string, directed bool) (gr.Graph[string, string], error) {
+	g := newGraph(directed)
+	path := dbPath(name)
+	data, err := os.ReadFile(path)
+	if err != nil {
+		if os.IsNotExist(err) {
+			return g, nil
+		}
+		return nil, err
+	}
+	var gd graphData
+	if err := json.Unmarshal(data, &gd); err != nil {
+		return nil, err
+	}
+	for _, v := range gd.Vertices {
+		attrs := make([]func(*gr.VertexProperties), 0)
+		for k, val := range v.Attrs {
+			attrs = append(attrs, gr.VertexAttribute(k, val))
+		}
+		g.AddVertex(v.ID, attrs...)
+	}
+	for _, e := range gd.Edges {
+		opts := []func(*gr.EdgeProperties){gr.EdgeWeight(e.Weight)}
+		for k, val := range e.Attrs {
+			opts = append(opts, gr.EdgeAttribute(k, val))
+		}
+		g.AddEdge(e.From, e.To, opts...)
+	}
+	return g, nil
+}
+
+func Save(name string, g gr.Graph[string, string], directed bool) error {
+	gd := graphData{Directed: directed}
+	adjMap, err := g.AdjacencyMap()
+	if err != nil {
+		return err
+	}
+	seen := make(map[string]bool)
+	for v := range adjMap {
+		_, props, _ := g.VertexWithProperties(v)
+		vd := vertexData{ID: v}
+		if props.Attributes != nil && len(props.Attributes) > 0 {
+			vd.Attrs = props.Attributes
+		}
+		gd.Vertices = append(gd.Vertices, vd)
+		seen[v] = true
+	}
+	edges, _ := g.Edges()
+	for _, e := range edges {
+		ed := edgeData{
+			From:   e.Source,
+			To:     e.Target,
+			Weight: e.Properties.Weight,
+		}
+		if e.Properties.Attributes != nil && len(e.Properties.Attributes) > 0 {
+			ed.Attrs = e.Properties.Attributes
+		}
+		gd.Edges = append(gd.Edges, ed)
+	}
+	data, err := json.MarshalIndent(gd, "", "  ")
+	if err != nil {
+		return err
+	}
+	return os.WriteFile(dbPath(name), data, 0644)
+}
+
+func newGraph(directed bool) gr.Graph[string, string] {
+	if directed {
+		return gr.New(gr.StringHash, gr.Directed(), gr.Weighted())
+	}
+	return gr.New(gr.StringHash, gr.Weighted())
+}
+
+func AddVertex(name string, directed bool, id string, attrs map[string]string) error {
+	g, err := Load(name, directed)
+	if err != nil {
+		return err
+	}
+	opts := make([]func(*gr.VertexProperties), 0)
+	for k, v := range attrs {
+		opts = append(opts, gr.VertexAttribute(k, v))
+	}
+	if err := g.AddVertex(id, opts...); err != nil {
+		return err
+	}
+	return Save(name, g, directed)
+}
+
+func AddEdge(name string, directed bool, from, to string, weight int, attrs map[string]string) error {
+	g, err := Load(name, directed)
+	if err != nil {
+		return err
+	}
+	opts := []func(*gr.EdgeProperties){gr.EdgeWeight(weight)}
+	for k, v := range attrs {
+		opts = append(opts, gr.EdgeAttribute(k, v))
+	}
+	if err := g.AddEdge(from, to, opts...); err != nil {
+		return err
+	}
+	return Save(name, g, directed)
+}
+
+func ShortestPath(name string, directed bool, from, to string) ([]string, error) {
+	g, err := Load(name, directed)
+	if err != nil {
+		return nil, err
+	}
+	return gr.ShortestPath(g, from, to)
+}
+
+func DFS(name string, directed bool, start string) ([]string, error) {
+	g, err := Load(name, directed)
+	if err != nil {
+		return nil, err
+	}
+	var result []string
+	err = gr.DFS(g, start, func(v string) bool {
+		result = append(result, v)
+		return false
+	})
+	return result, err
+}
+
+func BFS(name string, directed bool, start string) ([]string, error) {
+	g, err := Load(name, directed)
+	if err != nil {
+		return nil, err
+	}
+	var result []string
+	err = gr.BFS(g, start, func(v string) bool {
+		result = append(result, v)
+		return false
+	})
+	return result, err
+}
+
+func Vertices(name string, directed bool) ([]string, error) {
+	g, err := Load(name, directed)
+	if err != nil {
+		return nil, err
+	}
+	adjMap, err := g.AdjacencyMap()
+	if err != nil {
+		return nil, err
+	}
+	var result []string
+	for v := range adjMap {
+		result = append(result, v)
+	}
+	return result, nil
+}
+
+type EdgeInfo struct {
+	From   string
+	To     string
+	Weight int
+}
+
+func EdgeList(name string, directed bool) ([]EdgeInfo, error) {
+	g, err := Load(name, directed)
+	if err != nil {
+		return nil, err
+	}
+	edges, err := g.Edges()
+	if err != nil {
+		return nil, err
+	}
+	var result []EdgeInfo
+	for _, e := range edges {
+		result = append(result, EdgeInfo{From: e.Source, To: e.Target, Weight: e.Properties.Weight})
+	}
+	return result, nil
+}
+
+func ListDBs() ([]string, error) {
+	pattern := filepath.Join(config.GraphDir(), "*.json")
+	matches, err := filepath.Glob(pattern)
+	if err != nil {
+		return nil, err
+	}
+	var names []string
+	for _, m := range matches {
+		name := filepath.Base(m)
+		names = append(names, name[:len(name)-5])
+	}
+	return names, nil
+}
+
+// unused but keeps import
+var _ = fmt.Sprintf
