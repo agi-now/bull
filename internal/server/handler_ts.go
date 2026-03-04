@@ -126,7 +126,7 @@ func (s *Server) tsExport(w http.ResponseWriter, r *http.Request) {
 
 func (s *Server) tsDrop(w http.ResponseWriter, r *http.Request) {
 	db := r.PathValue("db")
-	if err := ts.DeleteDB(db); err != nil {
+	if err := ts.DropDB(db); err != nil {
 		fail(w, 500, err.Error())
 		return
 	}

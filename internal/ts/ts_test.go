@@ -160,17 +160,17 @@ func TestExportCSV(t *testing.T) {
 	}
 }
 
-func TestDeleteDB(t *testing.T) {
+func TestDropDB(t *testing.T) {
 	setup(t)
 	now := time.Now().Unix()
 	Write("db", "x", 1.0, now-10, nil)
 
 	dbDir := filepath.Join(config.TSDir(), "db")
 	if _, err := os.Stat(dbDir); os.IsNotExist(err) {
-		t.Fatal("db dir should exist before delete")
+		t.Fatal("db dir should exist before drop")
 	}
-	if err := DeleteDB("db"); err != nil {
-		t.Logf("warning: DeleteDB error (may be Windows file lock): %v", err)
+	if err := DropDB("db"); err != nil {
+		t.Logf("warning: DropDB error (may be Windows file lock): %v", err)
 	}
 }
 

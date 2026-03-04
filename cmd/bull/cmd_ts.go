@@ -206,7 +206,7 @@ func tsCmd() *cobra.Command {
 		Short: "Delete a TS database",
 		Args:  cobra.ExactArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
-			if err := ts.DeleteDB(args[0]); err != nil {
+			if err := ts.DropDB(args[0]); err != nil {
 				return err
 			}
 			fmt.Printf("dropped %s\n", args[0])

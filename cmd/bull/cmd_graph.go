@@ -330,13 +330,9 @@ func graphCmd() *cobra.Command {
 		},
 	}
 
-	allCmds := []*cobra.Command{addVertex, addEdge, shortestPath, dfs, bfs, vertices, edges,
-		delVertex, delEdge, neighbors, degree, hasPath, stats, vertexAttrs, components, toposort, hasCycle, importCSV, exportJSON, dropDB}
-	for _, c := range allCmds {
-		c.Flags().BoolVar(&undirected, "undirected", false, "use undirected graph")
-	}
-
-	cmd.AddCommand(allCmds...)
-	cmd.AddCommand(dbs)
+	cmd.PersistentFlags().BoolVar(&undirected, "undirected", false, "use undirected graph")
+	cmd.AddCommand(addVertex, addEdge, shortestPath, dfs, bfs, vertices, edges,
+		delVertex, delEdge, neighbors, degree, hasPath, stats, vertexAttrs,
+		components, toposort, hasCycle, importCSV, exportJSON, dropDB, dbs)
 	return cmd
 }

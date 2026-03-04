@@ -173,7 +173,7 @@ func ExportCSV(dbName, metric string, from, to int64, labels map[string]string, 
 	return nil
 }
 
-func DeleteDB(name string) error {
+func DropDB(name string) error {
 	return os.RemoveAll(filepath.Join(config.TSDir(), name))
 }
 

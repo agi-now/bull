@@ -1,24 +1,27 @@
 # Build output
 bin/
+bull
+bull.exe
 
 # Runtime data
 data/
 
 # Go
-*.exe
-*.exe~
 *.dll
 *.so
 *.dylib
-
-# Test
 *.test
 *.out
 coverage.txt
 
-# IDE
+# Web build output
+web/dist/
+web/node_modules/
+
+# IDE / Editor
 .idea/
 .vscode/
+.cursor/
 *.swp
 *.swo
 *~
@@ -26,6 +29,3 @@ coverage.txt
 # OS
 .DS_Store
 Thumbs.db
-
-# Editor / Tool
-.cursor/

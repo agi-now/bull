@@ -304,10 +304,7 @@ func kvCmd() *cobra.Command {
 		},
 	}
 
-	for _, c := range []*cobra.Command{put, get, del, list, count, exists, incr, decr, exportJSON, importJSON, scan, mget, mput} {
-		c.Flags().StringVar(&bucket, "bucket", "", "bucket name (default: \"default\")")
-	}
-
+	cmd.PersistentFlags().StringVar(&bucket, "bucket", "", "bucket name (default: \"default\")")
 	cmd.AddCommand(put, get, del, list, dbs, buckets, count, exists, incr, decr, exportJSON, importJSON, scan, dropDB, dropBucket, mget, mput)
 	return cmd
 }

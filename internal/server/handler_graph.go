@@ -1,6 +1,7 @@
 package server
 
 import (
+	"encoding/json"
 	"net/http"
 
 	bgraph "github.com/bull-cli/bull/internal/graph"
@@ -313,8 +314,12 @@ func (s *Server) graphExport(w http.ResponseWriter, r *http.Request) {
 		fail(w, 500, err.Error())
 		return
 	}
-	w.Header().Set("Content-Type", "application/json")
-	w.Write(data)
+	var parsed interface{}
+	if err := json.Unmarshal(data, &parsed); err != nil {
+		ok(w, string(data))
+		return
+	}
+	ok(w, parsed)
 }
 
 func (s *Server) graphDrop(w http.ResponseWriter, r *http.Request) {
