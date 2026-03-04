@@ -88,8 +88,8 @@ func Del(dbName, bucket, key string) error {
 }
 
 type KVPair struct {
-	Key   string
-	Value string
+	Key   string `json:"key"`
+	Value string `json:"value"`
 }
 
 func List(dbName, bucket, prefix string) ([]KVPair, error) {
@@ -243,6 +243,61 @@ func Incr(dbName, bucket, key string, delta int64) (int64, error) {
 		return bkt.Put([]byte(key), []byte(fmt.Sprintf("%d", newVal)))
 	})
 	return newVal, err
+}
+
+func MGet(dbName, bucket string, keys []string) ([]KVPair, error) {
+	db, err := openDB(dbName)
+	if err != nil {
+		return nil, err
+	}
+	defer db.Close()
+
+	b := []byte(bucket)
+	if bucket == "" {
+		b = defaultBucket
+	}
+	var pairs []KVPair
+	err = db.View(func(tx *bolt.Tx) error {
+		bkt := tx.Bucket(b)
+		if bkt == nil {
+			return nil
+		}
+		for _, k := range keys {
+			v := bkt.Get([]byte(k))
+			val := ""
+			if v != nil {
+				val = string(v)
+			}
+			pairs = append(pairs, KVPair{Key: k, Value: val})
+		}
+		return nil
+	})
+	return pairs, err
+}
+
+func MPut(dbName, bucket string, pairs []KVPair) error {
+	db, err := openDB(dbName)
+	if err != nil {
+		return err
+	}
+	defer db.Close()
+
+	b := []byte(bucket)
+	if bucket == "" {
+		b = defaultBucket
+	}
+	return db.Update(func(tx *bolt.Tx) error {
+		bkt, err := tx.CreateBucketIfNotExists(b)
+		if err != nil {
+			return err
+		}
+		for _, p := range pairs {
+			if err := bkt.Put([]byte(p.Key), []byte(p.Value)); err != nil {
+				return err
+			}
+		}
+		return nil
+	})
 }
 
 func Scan(dbName, bucket, startKey, endKey string) ([]KVPair, error) {

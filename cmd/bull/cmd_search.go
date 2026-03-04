@@ -33,14 +33,15 @@ func searchCmd() *cobra.Command {
 		},
 	}
 
-	var limit int
+	var limit, offset int
 	var format string
+	var fields []string
 	query := &cobra.Command{
 		Use:   "query <index> <query>",
 		Short: "Search the index",
 		Args:  cobra.ExactArgs(2),
 		RunE: func(cmd *cobra.Command, args []string) error {
-			result, err := search.QueryIndex(args[0], args[1], limit)
+			result, err := search.QueryIndexWithFields(args[0], args[1], limit, offset, fields)
 			if err != nil {
 				return err
 			}
@@ -52,14 +53,22 @@ func searchCmd() *cobra.Command {
 			default:
 				fmt.Printf("Total: %d\n", result.Total)
 				for _, h := range result.Hits {
-					fmt.Printf("  %s (score: %.4f)\n", h.ID, h.Score)
+					fmt.Printf("  %s (score: %.4f)", h.ID, h.Score)
+					if len(h.Fields) > 0 {
+						for k, v := range h.Fields {
+							fmt.Printf(" %s=%s", k, v)
+						}
+					}
+					fmt.Println()
 				}
 			}
 			return nil
 		},
 	}
 	query.Flags().IntVar(&limit, "limit", 10, "max results")
+	query.Flags().IntVar(&offset, "offset", 0, "skip first N results")
 	query.Flags().StringVar(&format, "format", "table", "output format: table|json")
+	query.Flags().StringArrayVar(&fields, "field", nil, "fields to return (default: all)")
 
 	info := &cobra.Command{
 		Use:   "info <index>",
@@ -128,39 +137,14 @@ func searchCmd() *cobra.Command {
 		},
 	}
 
-	var fields []string
-	queryFields := &cobra.Command{
-		Use:   "search <index> <query>",
-		Short: "Search with field return",
-		Args:  cobra.ExactArgs(2),
+	updateDoc := &cobra.Command{
+		Use:   "update <index> <docID> <json>",
+		Short: "Update (re-index) a document",
+		Args:  cobra.ExactArgs(3),
 		RunE: func(cmd *cobra.Command, args []string) error {
-			result, err := search.QueryIndexWithFields(args[0], args[1], limit, fields)
-			if err != nil {
-				return err
-			}
-			switch format {
-			case "json":
-				enc := json.NewEncoder(os.Stdout)
-				enc.SetIndent("", "  ")
-				enc.Encode(result)
-			default:
-				fmt.Printf("Total: %d\n", result.Total)
-				for _, h := range result.Hits {
-					fmt.Printf("  %s (score: %.4f)", h.ID, h.Score)
-					if len(h.Fields) > 0 {
-						for k, v := range h.Fields {
-							fmt.Printf(" %s=%s", k, v)
-						}
-					}
-					fmt.Println()
-				}
-			}
-			return nil
+			return search.UpdateDoc(args[0], args[1], args[2])
 		},
 	}
-	queryFields.Flags().IntVar(&limit, "limit", 10, "max results")
-	queryFields.Flags().StringVar(&format, "format", "table", "output format: table|json")
-	queryFields.Flags().StringArrayVar(&fields, "field", nil, "fields to return")
 
 	dropIdx := &cobra.Command{
 		Use:   "drop <index>",
@@ -175,6 +159,6 @@ func searchCmd() *cobra.Command {
 		},
 	}
 
-	cmd.AddCommand(create, index, query, info, dbs, bulk, deleteDoc, getDoc, queryFields, dropIdx)
+	cmd.AddCommand(create, index, query, info, dbs, bulk, deleteDoc, getDoc, updateDoc, dropIdx)
 	return cmd
 }

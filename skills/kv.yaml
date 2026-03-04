@@ -1,0 +1,113 @@
+name: bull-kv
+description: Embedded key-value store powered by bbolt (B+tree). Fast, persistent, bucket-aware.
+binary: bull
+prefix: kv
+
+global_flags:
+  --data-dir <path>: Override data directory (default: ./data). Applied to root command.
+
+triggers:
+  - when: Need to store/retrieve structured configuration or small data locally
+  - when: Need a lightweight persistent cache for key-value pairs
+  - when: Need to count items, check existence, or atomically increment counters
+  - when: Need to batch import/export key-value data as JSON
+  - when: Need to scan a range of keys by prefix or lexicographic range
+  - when: Need simple state persistence between AI agent steps
+
+commands:
+  - name: put
+    usage: bull kv put <db> <key> <value> [--bucket <name>]
+    description: Store a key-value pair.
+    output: (none on success, exit code 0)
+    example: bull kv put cache session_token abc123 --bucket sessions
+
+  - name: get
+    usage: bull kv get <db> <key> [--bucket <name>]
+    description: Retrieve the value for a given key.
+    output: Single line with the raw value. Exit code 1 if key not found.
+    example: bull kv get cache session_token --bucket sessions
+
+  - name: del
+    usage: bull kv del <db> <key> [--bucket <name>]
+    description: Delete a key.
+    output: (none on success)
+
+  - name: list
+    usage: bull kv list <db> [--bucket <name>] [--prefix <prefix>] [--format tsv|json]
+    description: List all key-value pairs (optionally filtered by prefix).
+    output: |
+      --format tsv (default): <key>\t<value> per line.
+      --format json: JSON array [{\"key\":\"k\",\"value\":\"v\"},...].
+    example: bull kv list myapp --prefix user: --format json
+
+  - name: scan
+    usage: bull kv scan <db> [--bucket <name>] [--start <key>] [--end <key>] [--format tsv|json]
+    description: Range scan keys within [start, end) bounds.
+    output: |
+      --format tsv (default): <key>\t<value> per line.
+      --format json: JSON array [{\"key\":\"k\",\"value\":\"v\"},...].
+    example: bull kv scan myapp --start "a" --end "m" --format json
+
+  - name: exists
+    usage: bull kv exists <db> <key> [--bucket <name>]
+    description: Check if a key exists.
+    output: "\"true\" or \"false\" on a single line."
+
+  - name: count
+    usage: bull kv count <db> [--bucket <name>]
+    description: Count keys in a bucket.
+    output: Single integer on a line.
+
+  - name: incr
+    usage: bull kv incr <db> <key> [delta] [--bucket <name>]
+    description: Atomically increment a numeric value. Default delta=1.
+    output: The new value (integer) on a single line.
+    example: bull kv incr counters page_views
+
+  - name: decr
+    usage: bull kv decr <db> <key> [delta] [--bucket <name>]
+    description: Atomically decrement a numeric value. Default delta=1.
+    output: The new value (integer) on a single line.
+
+  - name: buckets
+    usage: bull kv buckets <db>
+    description: List all bucket names in a database.
+    output: One bucket name per line.
+
+  - name: export
+    usage: bull kv export <db> [--bucket <name>]
+    description: Export all key-value pairs as JSON.
+    output: "JSON array: [{\"key\":\"k\",\"value\":\"v\"},...]"
+
+  - name: import
+    usage: bull kv import <db> -f <file.json> [--bucket <name>]
+    description: Import key-value pairs from a JSON file.
+    output: "\"imported N pairs\""
+    input_format: "JSON array: [{\"key\":\"k\",\"value\":\"v\"},...]"
+
+  - name: drop
+    usage: bull kv drop <db>
+    description: Delete an entire database file.
+    output: "\"dropped <db>\""
+
+  - name: drop-bucket
+    usage: bull kv drop-bucket <db> <bucket>
+    description: Delete a bucket from a database.
+    output: "\"dropped bucket <name>\""
+
+  - name: mget
+    usage: bull kv mget <db> <key1> <key2> ... [--bucket <name>]
+    description: Get multiple keys in one call. Returns JSON array.
+    output: "JSON array: [{\"key\":\"k\",\"value\":\"v\"},...]"
+    example: bull kv mget cache token1 token2 token3
+
+  - name: mput
+    usage: bull kv mput <db> <key1> <val1> <key2> <val2> ... [--bucket <name>]
+    description: Put multiple key-value pairs in one atomic batch.
+    output: "\"put N pairs\""
+    example: bull kv mput cache k1 v1 k2 v2 k3 v3
+
+  - name: dbs
+    usage: bull kv dbs
+    description: List all KV databases.
+    output: One database name per line (without .db extension).

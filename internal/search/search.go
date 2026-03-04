@@ -87,7 +87,7 @@ func DeleteDoc(name, docID string) error {
 	return idx.Delete(docID)
 }
 
-func QueryIndexWithFields(name, queryStr string, limit int, fields []string) (*SearchResult, error) {
+func QueryIndexWithFields(name, queryStr string, limit, offset int, fields []string) (*SearchResult, error) {
 	idx, err := openIndex(name)
 	if err != nil {
 		return nil, err
@@ -95,7 +95,7 @@ func QueryIndexWithFields(name, queryStr string, limit int, fields []string) (*S
 	defer idx.Close()
 
 	q := bleve.NewQueryStringQuery(queryStr)
-	req := bleve.NewSearchRequestOptions(q, limit, 0, false)
+	req := bleve.NewSearchRequestOptions(q, limit, offset, false)
 	if len(fields) > 0 {
 		req.Fields = fields
 	} else {
@@ -205,6 +205,10 @@ func BulkIndex(name, ndjsonFile string) (int, error) {
 		}
 	}
 	return count, scanner.Err()
+}
+
+func UpdateDoc(name, docID, jsonStr string) error {
+	return Index(name, docID, jsonStr)
 }
 
 func DropIndex(name string) error {

@@ -1,0 +1,134 @@
+name: bull-graph
+description: Embedded graph data structure and algorithms (pure Go). Supports directed/undirected weighted graphs with JSON persistence.
+binary: bull
+prefix: graph
+
+global_flags:
+  --data-dir <path>: Override data directory (default: ./data). Applied to root command.
+
+defaults:
+  direction: Directed (use --undirected to switch).
+  storage: JSON file in data/graph/<name>.json.
+
+triggers:
+  - when: Need to model relationships between entities (users, services, dependencies)
+  - when: Need to find shortest paths between nodes
+  - when: Need to traverse a graph via DFS or BFS
+  - when: Need to check reachability between two nodes
+  - when: Need to batch-import graph edges from CSV
+  - when: Need to analyze connectivity or degree of nodes
+
+commands:
+  - name: add-vertex
+    usage: bull graph add-vertex <db> <id> [--attr key=value ...] [--undirected]
+    description: Add a vertex with optional attributes.
+    output: (none on success)
+    example: bull graph add-vertex deps svc-auth --attr type=service --attr team=platform
+
+  - name: add-edge
+    usage: bull graph add-edge <db> <from> <to> [--weight N] [--attr key=value ...] [--undirected]
+    description: Add a weighted edge between two vertices. Both vertices must exist.
+    output: (none on success)
+    example: bull graph add-edge deps svc-auth svc-db --weight 5
+
+  - name: del-vertex
+    usage: bull graph del-vertex <db> <id> [--undirected]
+    description: Remove a vertex and all its edges.
+    output: (none on success)
+
+  - name: del-edge
+    usage: bull graph del-edge <db> <from> <to> [--undirected]
+    description: Remove an edge.
+    output: (none on success)
+
+  - name: vertices
+    usage: bull graph vertices <db> [--undirected]
+    description: List all vertex IDs.
+    output: One vertex ID per line.
+
+  - name: edges
+    usage: bull graph edges <db> [--undirected]
+    description: List all edges.
+    output: "\"from -> to\" or \"from -> to (weight: N)\" per line."
+
+  - name: neighbors
+    usage: bull graph neighbors <db> <vertex> [--undirected]
+    description: List direct neighbors (outgoing edges in directed mode).
+    output: One neighbor ID per line.
+
+  - name: degree
+    usage: bull graph degree <db> <vertex> [--undirected]
+    description: Get the out-degree (directed) or degree (undirected) of a vertex.
+    output: Single integer on a line.
+
+  - name: attrs
+    usage: bull graph attrs <db> <vertex> [--undirected]
+    description: Show attributes of a vertex.
+    output: "\"key=value\" per line."
+
+  - name: shortest-path
+    usage: bull graph shortest-path <db> <from> <to> [--undirected]
+    description: Find the shortest weighted path (Dijkstra).
+    output: "\"A -> B -> C\" path string. Error if no path exists."
+    example: bull graph shortest-path deps svc-auth svc-cache
+
+  - name: has-path
+    usage: bull graph has-path <db> <from> <to> [--undirected]
+    description: Check if any path exists between two vertices.
+    output: "\"true\" or \"false\"."
+
+  - name: dfs
+    usage: bull graph dfs <db> <start> [--undirected]
+    description: Depth-first traversal from a starting vertex.
+    output: One vertex ID per line in visit order.
+
+  - name: bfs
+    usage: bull graph bfs <db> <start> [--undirected]
+    description: Breadth-first traversal from a starting vertex.
+    output: One vertex ID per line in visit order.
+
+  - name: stats
+    usage: bull graph stats <db> [--undirected]
+    description: Show vertex and edge counts.
+    output: |
+      vertices: N
+      edges: N
+
+  - name: components
+    usage: bull graph components <db> [--undirected]
+    description: Find connected components. Uses SCC (Tarjan) for directed graphs, BFS for undirected.
+    output: "\"Component N: v1, v2, v3\" per line."
+    example: bull graph components deps
+
+  - name: toposort
+    usage: bull graph toposort <db> [--undirected]
+    description: Topological sort (directed acyclic graphs only). Errors if cycle detected.
+    output: One vertex ID per line in topological order.
+    example: bull graph toposort pipeline
+
+  - name: has-cycle
+    usage: bull graph has-cycle <db> [--undirected]
+    description: Check if the graph contains any cycle.
+    output: "\"true\" or \"false\"."
+
+  - name: import-csv
+    usage: bull graph import-csv <db> <file.csv> [--undirected]
+    description: Bulk import edges from CSV. Auto-creates vertices.
+    output: "\"added N vertices, N edges\""
+    input_format: "CSV: from,to[,weight] per line. Lines starting with # are skipped."
+    example: bull graph import-csv social friends.csv --undirected
+
+  - name: export
+    usage: bull graph export <db> [--undirected]
+    description: Export full graph as JSON.
+    output: "JSON: {\"directed\":bool,\"vertices\":[...],\"edges\":[...]}"
+
+  - name: drop
+    usage: bull graph drop <db>
+    description: Delete a graph file.
+    output: "\"dropped <db>\""
+
+  - name: dbs
+    usage: bull graph dbs
+    description: List all graph files.
+    output: One graph name per line (without .json extension).

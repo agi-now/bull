@@ -1,0 +1,81 @@
+name: bull-search
+description: Embedded full-text search engine powered by bleve. Index JSON documents and query with scoring and field return.
+binary: bull
+prefix: search
+
+global_flags:
+  --data-dir <path>: Override data directory (default: ./data). Applied to root command.
+
+triggers:
+  - when: Need to perform full-text search on local documents or logs
+  - when: Need to index structured JSON data for keyword lookup
+  - when: Need to bulk-index documents from NDJSON files
+  - when: Need to retrieve or delete specific documents by ID
+  - when: Need scored search with field-level result return
+
+notes: |
+  An index must be created before indexing documents.
+  Query syntax supports: field:value, +required, -excluded, "exact phrase", wildcards (term*).
+
+commands:
+  - name: create
+    usage: bull search create <index>
+    description: Create a new empty search index.
+    output: (none on success)
+    example: bull search create articles
+
+  - name: index
+    usage: bull search index <index> <docID> <json>
+    description: Index a single JSON document.
+    output: (none on success)
+    example: bull search index articles doc1 "{\"title\":\"Hello\",\"body\":\"World\"}"
+
+  - name: bulk
+    usage: bull search bulk <index> <ndjson-file>
+    description: Bulk index from NDJSON. Uses _id or id field as doc ID; auto-increments otherwise.
+    output: "\"indexed N documents\""
+    input_format: "One JSON object per line. Optional _id or id field for document ID."
+    example: bull search bulk articles articles.ndjson
+
+  - name: query
+    usage: bull search query <index> <query> [--field name ...] [--limit N] [--offset N] [--format table|json]
+    description: Search the index with pagination. Returns IDs, scores, and optionally field values.
+    output: |
+      --format table (default): "Total: N" header, then "  <id> (score: X.XXXX) [field=value ...]" per hit.
+      --format json: {"total":N,"hits":[{"id":"...","score":N,"fields":{...}}]}
+    example: |
+      bull search query articles "hello world" --limit 5
+      bull search query articles "title:hello" --field title --field body --format json
+
+  - name: get
+    usage: bull search get <index> <docID>
+    description: Retrieve a document by ID with all stored fields.
+    output: "JSON object: {\"_id\":\"...\", \"field\":\"value\", ...}"
+
+  - name: update
+    usage: bull search update <index> <docID> <json>
+    description: Update (re-index) a document. Replaces the existing document with the same ID.
+    output: (none on success)
+    example: bull search update articles doc1 "{\"title\":\"Updated\",\"body\":\"New content\"}"
+
+  - name: delete
+    usage: bull search delete <index> <docID>
+    description: Delete a document by ID.
+    output: (none on success)
+
+  - name: info
+    usage: bull search info <index>
+    description: Show index statistics.
+    output: |
+      Index: <name>
+      Documents: N
+
+  - name: drop
+    usage: bull search drop <index>
+    description: Delete an entire search index directory.
+    output: "\"dropped <index>\""
+
+  - name: dbs
+    usage: bull search dbs
+    description: List all search indexes.
+    output: One index name per line (without .bleve extension).

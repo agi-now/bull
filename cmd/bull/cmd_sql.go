@@ -17,6 +17,7 @@ func sqlCmd() *cobra.Command {
 	}
 
 	var format string
+	var queryLimit int
 
 	exec := &cobra.Command{
 		Use:   "exec <db> <sql>",
@@ -37,7 +38,11 @@ func sqlCmd() *cobra.Command {
 		Short: "Query and display results",
 		Args:  cobra.ExactArgs(2),
 		RunE: func(cmd *cobra.Command, args []string) error {
-			result, err := bsql.Query(args[0], args[1])
+			sqlStr := args[1]
+			if queryLimit > 0 {
+				sqlStr = fmt.Sprintf("SELECT * FROM (%s) LIMIT %d", sqlStr, queryLimit)
+			}
+			result, err := bsql.Query(args[0], sqlStr)
 			if err != nil {
 				return err
 			}
@@ -53,6 +58,7 @@ func sqlCmd() *cobra.Command {
 		},
 	}
 	query.Flags().StringVar(&format, "format", "table", "output format: table|csv|json")
+	query.Flags().IntVar(&queryLimit, "limit", 0, "limit number of rows (0 = no limit)")
 
 	shell := &cobra.Command{
 		Use:   "shell <db>",
@@ -139,14 +145,20 @@ func sqlCmd() *cobra.Command {
 		Short: "Import CSV into table",
 		Args:  cobra.ExactArgs(3),
 		RunE: func(cmd *cobra.Command, args []string) error {
-			return bsql.ImportCSV(args[0], args[1], args[2])
+			n, err := bsql.ImportCSV(args[0], args[1], args[2])
+			if err != nil {
+				return err
+			}
+			fmt.Printf("imported %d rows\n", n)
+			return nil
 		},
 	}
 
 	var output string
+	var exportFormat string
 	export := &cobra.Command{
 		Use:   "export <db> <sql>",
-		Short: "Export query result to CSV",
+		Short: "Export query result to file",
 		Args:  cobra.ExactArgs(2),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			result, err := bsql.Query(args[0], args[1])
@@ -162,11 +174,17 @@ func sqlCmd() *cobra.Command {
 				defer f.Close()
 				w = f
 			}
-			result.FormatCSV(w)
+			switch exportFormat {
+			case "json":
+				result.FormatJSON(w)
+			default:
+				result.FormatCSV(w)
+			}
 			return nil
 		},
 	}
 	export.Flags().StringVarP(&output, "output", "o", "", "output file (default: stdout)")
+	export.Flags().StringVar(&exportFormat, "format", "csv", "output format: csv|json")
 
 	dbs := &cobra.Command{
 		Use:   "dbs",
@@ -245,10 +263,50 @@ func sqlCmd() *cobra.Command {
 		Short: "Import JSON array into table",
 		Args:  cobra.ExactArgs(3),
 		RunE: func(cmd *cobra.Command, args []string) error {
-			if err := bsql.ImportJSON(args[0], args[1], args[2]); err != nil {
+			n, err := bsql.ImportJSON(args[0], args[1], args[2])
+			if err != nil {
 				return err
 			}
-			fmt.Println("ok")
+			fmt.Printf("imported %d rows\n", n)
+			return nil
+		},
+	}
+
+	describe := &cobra.Command{
+		Use:   "describe <db> <table>",
+		Short: "Show column info (PRAGMA table_info)",
+		Args:  cobra.ExactArgs(2),
+		RunE: func(cmd *cobra.Command, args []string) error {
+			cols, err := bsql.Describe(args[0], args[1])
+			if err != nil {
+				return err
+			}
+			fmt.Printf("%-4s %-20s %-10s %-8s %-10s %-4s\n", "CID", "NAME", "TYPE", "NOTNULL", "DEFAULT", "PK")
+			for _, c := range cols {
+				nn := ""
+				if c.NotNull {
+					nn = "YES"
+				}
+				pk := ""
+				if c.PK {
+					pk = "YES"
+				}
+				fmt.Printf("%-4d %-20s %-10s %-8s %-10s %-4s\n", c.CID, c.Name, c.Type, nn, c.Default, pk)
+			}
+			return nil
+		},
+	}
+
+	importNDJSON := &cobra.Command{
+		Use:   "import-ndjson <db> <table> <file.ndjson>",
+		Short: "Import NDJSON (one JSON object per line) into table",
+		Args:  cobra.ExactArgs(3),
+		RunE: func(cmd *cobra.Command, args []string) error {
+			n, err := bsql.ImportNDJSON(args[0], args[1], args[2])
+			if err != nil {
+				return err
+			}
+			fmt.Printf("imported %d rows\n", n)
 			return nil
 		},
 	}
@@ -266,6 +324,6 @@ func sqlCmd() *cobra.Command {
 		},
 	}
 
-	cmd.AddCommand(exec, query, shell, importCmd, export, dbs, tables, schema, countRows, execFile, importJSONCmd, dropDB)
+	cmd.AddCommand(exec, query, shell, importCmd, export, dbs, tables, schema, countRows, execFile, importJSONCmd, describe, importNDJSON, dropDB)
 	return cmd
 }

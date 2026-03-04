@@ -2,7 +2,8 @@
 set -euo pipefail
 
 VERSION=${VERSION:-"dev"}
-LDFLAGS="-s -w -X main.version=${VERSION}"
+BUILD_TIME=$(date -u '+%Y-%m-%dT%H:%M:%SZ')
+LDFLAGS="-s -w -X main.Version=${VERSION} -X main.BuildTime=${BUILD_TIME}"
 OUT_DIR="bin"
 
 mkdir -p "${OUT_DIR}"

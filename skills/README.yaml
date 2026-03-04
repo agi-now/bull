@@ -1,0 +1,153 @@
+name: bull
+version: dev
+description: |
+  Bull is an all-in-one embedded engine toolkit packaged as a single ~18MB Go binary.
+  It provides 5 core capabilities: KV, SQL, Graph, Search, and Time-Series.
+  All data is stored locally under --data-dir (default: ./data).
+  Designed for AI agent skill extensions — download once, use everywhere.
+
+binary_size: ~18.5 MB
+platforms: [linux/amd64, linux/arm64, darwin/amd64, darwin/arm64, windows/amd64]
+
+global_flags:
+  --data-dir <path>: "Override data directory. Default: ./data. Example: bull --data-dir /tmp/bull kv dbs"
+
+skills:
+  - file: kv.yaml
+    summary: "KV (bbolt): put/get/del/mget/mput/list/scan/exists/count/incr/decr/export/import/drop"
+    use_when: "Need fast persistent key-value storage, batch ops, counters, or config caching"
+    command_count: 17
+
+  - file: sql.yaml
+    summary: "SQL (SQLite): exec/query/import-csv/import-json/import-ndjson/export/exec-file/tables/schema/describe/count/shell/drop"
+    use_when: "Need relational queries, CSV/JSON/NDJSON data processing, joins, or aggregations"
+    command_count: 15
+
+  - file: graph.yaml
+    summary: "Graph: add/del vertex+edge, shortest-path, DFS/BFS, neighbors, degree, has-path, components, toposort, has-cycle, import-csv/export"
+    use_when: "Need to model/traverse relationships, dependency graphs, cycle detection, or topological ordering"
+    command_count: 21
+
+  - file: search.yaml
+    summary: "Search (bleve): create/index/bulk/query+fields+offset/get/update/delete/info/drop"
+    use_when: "Need full-text keyword search over documents with pagination and updates"
+    command_count: 11
+
+  - file: ts.yaml
+    summary: "Time-Series: write/bulk/query/latest/count/export with labels and time ranges"
+    use_when: "Need local metrics recording, latest-point lookup, counting, and export"
+    command_count: 8
+
+decision_matrix:
+  - scenario: "Store application config or session data"
+    skill: kv
+    commands: ["bull kv put <db> <key> <value>", "bull kv get <db> <key>"]
+
+  - scenario: "Analyze CSV data with SQL"
+    skill: sql
+    workflow:
+      - bull sql import <db> <table> data.csv
+      - bull sql query <db> "SELECT col, COUNT(*) FROM <table> GROUP BY col" --format json
+
+  - scenario: "Find shortest dependency path between services"
+    skill: graph
+    commands: ["bull graph shortest-path <db> <from> <to>"]
+
+  - scenario: "Search through log entries for keywords"
+    skill: search
+    workflow:
+      - bull search create logs
+      - bull search bulk logs logs.ndjson
+      - bull search query logs "error timeout" --limit 20 --format json
+
+  - scenario: "Record and query CPU metrics over time"
+    skill: ts
+    workflow:
+      - bull ts write monitoring cpu 75.5 --label host=server1
+      - bull ts query monitoring cpu --format json
+
+  - scenario: "Import JSON API response and query it"
+    skill: sql
+    workflow:
+      - bull sql import-json <db> <table> response.json
+      - bull sql query <db> "SELECT * FROM <table> WHERE status='active'" --format json
+
+  - scenario: "Check if two nodes are connected in a network"
+    skill: graph
+    commands: ["bull graph has-path <db> <from> <to>"]
+
+  - scenario: "Build a relationship graph from CSV"
+    skill: graph
+    workflow:
+      - bull graph import-csv <db> edges.csv --undirected
+      - bull graph stats <db> --undirected
+
+  - scenario: "Track and query page view counters"
+    skill: kv
+    workflow:
+      - bull kv incr analytics page:/home
+      - bull kv incr analytics page:/about
+      - bull kv list analytics --prefix page:
+
+  - scenario: "Full-text search with field return"
+    skill: search
+    commands: ["bull search query <idx> <query> --field title --field body --format json"]
+
+  - scenario: "Persist intermediate state between agent steps"
+    skill: kv
+    workflow:
+      - bull kv put state step1_result '{"status":"done","count":42}'
+      - bull kv get state step1_result
+
+  - scenario: "Compare two datasets using SQL"
+    skill: sql
+    workflow:
+      - bull sql import <db> old_data old.csv
+      - bull sql import <db> new_data new.csv
+      - bull sql query <db> "SELECT n.* FROM new_data n LEFT JOIN old_data o ON n.id=o.id WHERE o.id IS NULL" --format json
+
+  - scenario: "Batch fetch multiple config values"
+    skill: kv
+    commands: ["bull kv mget config db_host db_port db_name"]
+
+  - scenario: "Detect circular dependencies in a build graph"
+    skill: graph
+    commands: ["bull graph has-cycle <db>"]
+
+  - scenario: "Order build tasks by dependency"
+    skill: graph
+    commands: ["bull graph toposort pipeline"]
+
+  - scenario: "Find isolated clusters in a network"
+    skill: graph
+    commands: ["bull graph components network --undirected"]
+
+  - scenario: "Import streaming NDJSON logs into SQL"
+    skill: sql
+    workflow:
+      - bull sql import-ndjson <db> logs access.ndjson
+      - bull sql query <db> "SELECT status, COUNT(*) FROM logs GROUP BY status" --format json
+
+  - scenario: "Paginate through search results"
+    skill: search
+    workflow:
+      - bull search query articles "keyword" --limit 10 --offset 0 --format json
+      - bull search query articles "keyword" --limit 10 --offset 10 --format json
+
+  - scenario: "Get the most recent CPU reading"
+    skill: ts
+    commands: ["bull ts latest monitoring cpu_usage --label host=server1 --format json"]
+
+  - scenario: "View all databases across all engines"
+    skill: global
+    commands: ["bull info"]
+
+  - scenario: "Inspect column types before querying"
+    skill: sql
+    commands: ["bull sql describe mydb users"]
+
+output_conventions:
+  success_text: Commands print human-readable success message to stdout.
+  error: Errors go to stderr with non-zero exit code.
+  machine_readable: Use --format json wherever available for AI agent parsing.
+  silent_success: Mutation commands (put, del, add-vertex, etc.) produce no stdout on success.

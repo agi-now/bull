@@ -71,7 +71,6 @@ func Save(name string, g gr.Graph[string, string], directed bool) error {
 	if err != nil {
 		return err
 	}
-	seen := make(map[string]bool)
 	for v := range adjMap {
 		_, props, _ := g.VertexWithProperties(v)
 		vd := vertexData{ID: v}
@@ -79,7 +78,6 @@ func Save(name string, g gr.Graph[string, string], directed bool) error {
 			vd.Attrs = props.Attributes
 		}
 		gd.Vertices = append(gd.Vertices, vd)
-		seen[v] = true
 	}
 	edges, _ := g.Edges()
 	for _, e := range edges {
@@ -306,6 +304,63 @@ func VertexAttrs(name string, directed bool, id string) (map[string]string, erro
 		return nil, err
 	}
 	return props.Attributes, nil
+}
+
+func ConnectedComponents(name string, directed bool) ([][]string, error) {
+	g, err := Load(name, directed)
+	if err != nil {
+		return nil, err
+	}
+	if directed {
+		return gr.StronglyConnectedComponents(g)
+	}
+	adjMap, err := g.AdjacencyMap()
+	if err != nil {
+		return nil, err
+	}
+	visited := make(map[string]bool)
+	var components [][]string
+	for v := range adjMap {
+		if visited[v] {
+			continue
+		}
+		var component []string
+		queue := []string{v}
+		visited[v] = true
+		for len(queue) > 0 {
+			cur := queue[0]
+			queue = queue[1:]
+			component = append(component, cur)
+			for neighbor := range adjMap[cur] {
+				if !visited[neighbor] {
+					visited[neighbor] = true
+					queue = append(queue, neighbor)
+				}
+			}
+		}
+		components = append(components, component)
+	}
+	return components, nil
+}
+
+func TopologicalSort(name string, directed bool) ([]string, error) {
+	g, err := Load(name, directed)
+	if err != nil {
+		return nil, err
+	}
+	return gr.TopologicalSort(g)
+}
+
+func HasCycle(name string, directed bool) (bool, error) {
+	g, err := Load(name, directed)
+	if err != nil {
+		return false, err
+	}
+	_, err = gr.TopologicalSort(g)
+	if err != nil {
+		return true, nil
+	}
+	return false, nil
 }
 
 func ListDBs() ([]string, error) {

@@ -1,7 +1,8 @@
 $ErrorActionPreference = "Stop"
 
 $Version = if ($env:VERSION) { $env:VERSION } else { "dev" }
-$LDFlags = "-s -w -X main.version=$Version"
+$BuildTime = (Get-Date).ToUniversalTime().ToString("yyyy-MM-ddTHH:mm:ssZ")
+$LDFlags = "-s -w -X main.Version=$Version -X main.BuildTime=$BuildTime"
 $OutDir = "bin"
 
 New-Item -ItemType Directory -Force -Path $OutDir | Out-Null

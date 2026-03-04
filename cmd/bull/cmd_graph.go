@@ -243,6 +243,52 @@ func graphCmd() *cobra.Command {
 		},
 	}
 
+	components := &cobra.Command{
+		Use:   "components <db>",
+		Short: "Find connected components (SCC for directed)",
+		Args:  cobra.ExactArgs(1),
+		RunE: func(cmd *cobra.Command, args []string) error {
+			cc, err := bgraph.ConnectedComponents(args[0], directed())
+			if err != nil {
+				return err
+			}
+			for i, c := range cc {
+				fmt.Printf("Component %d: %s\n", i+1, strings.Join(c, ", "))
+			}
+			return nil
+		},
+	}
+
+	toposort := &cobra.Command{
+		Use:   "toposort <db>",
+		Short: "Topological sort (directed graphs)",
+		Args:  cobra.ExactArgs(1),
+		RunE: func(cmd *cobra.Command, args []string) error {
+			result, err := bgraph.TopologicalSort(args[0], directed())
+			if err != nil {
+				return err
+			}
+			for _, v := range result {
+				fmt.Println(v)
+			}
+			return nil
+		},
+	}
+
+	hasCycle := &cobra.Command{
+		Use:   "has-cycle <db>",
+		Short: "Check if the graph has a cycle",
+		Args:  cobra.ExactArgs(1),
+		RunE: func(cmd *cobra.Command, args []string) error {
+			ok, err := bgraph.HasCycle(args[0], directed())
+			if err != nil {
+				return err
+			}
+			fmt.Println(ok)
+			return nil
+		},
+	}
+
 	importCSV := &cobra.Command{
 		Use:   "import-csv <db> <file.csv>",
 		Short: "Import edges from CSV (from,to[,weight])",
@@ -285,7 +331,7 @@ func graphCmd() *cobra.Command {
 	}
 
 	allCmds := []*cobra.Command{addVertex, addEdge, shortestPath, dfs, bfs, vertices, edges,
-		delVertex, delEdge, neighbors, degree, hasPath, stats, vertexAttrs, importCSV, exportJSON, dropDB}
+		delVertex, delEdge, neighbors, degree, hasPath, stats, vertexAttrs, components, toposort, hasCycle, importCSV, exportJSON, dropDB}
 	for _, c := range allCmds {
 		c.Flags().BoolVar(&undirected, "undirected", false, "use undirected graph")
 	}

@@ -1,6 +1,7 @@
 package sql
 
 import (
+	"bufio"
 	"database/sql"
 	"encoding/csv"
 	"encoding/json"
@@ -141,22 +142,22 @@ func (r *QueryResult) FormatJSON(w io.Writer) {
 	enc.Encode(out)
 }
 
-func ImportCSV(dbName, table, csvFile string) error {
+func ImportCSV(dbName, table, csvFile string) (int, error) {
 	f, err := os.Open(csvFile)
 	if err != nil {
-		return err
+		return 0, err
 	}
 	defer f.Close()
 
 	reader := csv.NewReader(f)
 	headers, err := reader.Read()
 	if err != nil {
-		return err
+		return 0, err
 	}
 
 	db, err := OpenDB(dbName)
 	if err != nil {
-		return err
+		return 0, err
 	}
 	defer db.Close()
 
@@ -166,7 +167,7 @@ func ImportCSV(dbName, table, csvFile string) error {
 	}
 	createSQL := fmt.Sprintf(`CREATE TABLE IF NOT EXISTS "%s" (%s)`, table, strings.Join(colDefs, ", "))
 	if _, err := db.Exec(createSQL); err != nil {
-		return err
+		return 0, err
 	}
 
 	placeholders := make([]string, len(headers))
@@ -177,14 +178,15 @@ func ImportCSV(dbName, table, csvFile string) error {
 
 	tx, err := db.Begin()
 	if err != nil {
-		return err
+		return 0, err
 	}
 	stmt, err := tx.Prepare(insertSQL)
 	if err != nil {
 		tx.Rollback()
-		return err
+		return 0, err
 	}
 
+	count := 0
 	for {
 		record, err := reader.Read()
 		if err == io.EOF {
@@ -192,7 +194,7 @@ func ImportCSV(dbName, table, csvFile string) error {
 		}
 		if err != nil {
 			tx.Rollback()
-			return err
+			return count, err
 		}
 		args := make([]interface{}, len(record))
 		for i, v := range record {
@@ -200,10 +202,11 @@ func ImportCSV(dbName, table, csvFile string) error {
 		}
 		if _, err := stmt.Exec(args...); err != nil {
 			tx.Rollback()
-			return err
+			return count, err
 		}
+		count++
 	}
-	return tx.Commit()
+	return count, tx.Commit()
 }
 
 func Tables(dbName string) ([]string, error) {
@@ -269,17 +272,17 @@ func ExecFile(dbName, sqlFile string) error {
 	return err
 }
 
-func ImportJSON(dbName, table, jsonFile string) error {
+func ImportJSON(dbName, table, jsonFile string) (int, error) {
 	data, err := os.ReadFile(jsonFile)
 	if err != nil {
-		return err
+		return 0, err
 	}
 	var rows []map[string]interface{}
 	if err := json.Unmarshal(data, &rows); err != nil {
-		return err
+		return 0, err
 	}
 	if len(rows) == 0 {
-		return nil
+		return 0, nil
 	}
 
 	var columns []string
@@ -289,7 +292,7 @@ func ImportJSON(dbName, table, jsonFile string) error {
 
 	db, err := OpenDB(dbName)
 	if err != nil {
-		return err
+		return 0, err
 	}
 	defer db.Close()
 
@@ -299,7 +302,7 @@ func ImportJSON(dbName, table, jsonFile string) error {
 	}
 	createSQL := fmt.Sprintf(`CREATE TABLE IF NOT EXISTS "%s" (%s)`, table, strings.Join(colDefs, ", "))
 	if _, err := db.Exec(createSQL); err != nil {
-		return err
+		return 0, err
 	}
 
 	placeholders := make([]string, len(columns))
@@ -311,12 +314,12 @@ func ImportJSON(dbName, table, jsonFile string) error {
 
 	tx, err := db.Begin()
 	if err != nil {
-		return err
+		return 0, err
 	}
 	stmt, err := tx.Prepare(insertSQL)
 	if err != nil {
 		tx.Rollback()
-		return err
+		return 0, err
 	}
 
 	for _, row := range rows {
@@ -326,10 +329,126 @@ func ImportJSON(dbName, table, jsonFile string) error {
 		}
 		if _, err := stmt.Exec(vals...); err != nil {
 			tx.Rollback()
-			return err
+			return 0, err
 		}
 	}
-	return tx.Commit()
+	return len(rows), tx.Commit()
+}
+
+type ColumnInfo struct {
+	CID       int    `json:"cid"`
+	Name      string `json:"name"`
+	Type      string `json:"type"`
+	NotNull   bool   `json:"notnull"`
+	Default   string `json:"default"`
+	PK        bool   `json:"pk"`
+}
+
+func Describe(dbName, table string) ([]ColumnInfo, error) {
+	db, err := OpenDB(dbName)
+	if err != nil {
+		return nil, err
+	}
+	defer db.Close()
+
+	rows, err := db.Query(fmt.Sprintf("PRAGMA table_info(\"%s\")", table))
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	var cols []ColumnInfo
+	for rows.Next() {
+		var c ColumnInfo
+		var notnull, pk int
+		var dflt *string
+		if err := rows.Scan(&c.CID, &c.Name, &c.Type, &notnull, &dflt, &pk); err != nil {
+			return nil, err
+		}
+		c.NotNull = notnull == 1
+		c.PK = pk == 1
+		if dflt != nil {
+			c.Default = *dflt
+		}
+		cols = append(cols, c)
+	}
+	return cols, rows.Err()
+}
+
+func ImportNDJSON(dbName, table, ndjsonFile string) (int, error) {
+	f, err := os.Open(ndjsonFile)
+	if err != nil {
+		return 0, err
+	}
+	defer f.Close()
+
+	db, err := OpenDB(dbName)
+	if err != nil {
+		return 0, err
+	}
+	defer db.Close()
+
+	scanner := bufio.NewScanner(f)
+	scanner.Buffer(make([]byte, 1024*1024), 1024*1024)
+
+	var columns []string
+	var stmt *sql.Stmt
+	tx, err := db.Begin()
+	if err != nil {
+		return 0, err
+	}
+
+	count := 0
+	for scanner.Scan() {
+		line := scanner.Bytes()
+		if len(line) == 0 {
+			continue
+		}
+		var row map[string]interface{}
+		if err := json.Unmarshal(line, &row); err != nil {
+			tx.Rollback()
+			return count, fmt.Errorf("line %d: %w", count+1, err)
+		}
+		if stmt == nil {
+			for k := range row {
+				columns = append(columns, k)
+			}
+			colDefs := make([]string, len(columns))
+			for i, c := range columns {
+				colDefs[i] = fmt.Sprintf(`"%s" TEXT`, c)
+			}
+			createSQL := fmt.Sprintf(`CREATE TABLE IF NOT EXISTS "%s" (%s)`, table, strings.Join(colDefs, ", "))
+			if _, err := tx.Exec(createSQL); err != nil {
+				tx.Rollback()
+				return 0, err
+			}
+			placeholders := make([]string, len(columns))
+			for i := range placeholders {
+				placeholders[i] = "?"
+			}
+			insertSQL := fmt.Sprintf(`INSERT INTO "%s" (%s) VALUES (%s)`, table,
+				strings.Join(columns, ", "), strings.Join(placeholders, ", "))
+			stmt, err = tx.Prepare(insertSQL)
+			if err != nil {
+				tx.Rollback()
+				return 0, err
+			}
+		}
+		vals := make([]interface{}, len(columns))
+		for i, c := range columns {
+			vals[i] = fmt.Sprintf("%v", row[c])
+		}
+		if _, err := stmt.Exec(vals...); err != nil {
+			tx.Rollback()
+			return count, err
+		}
+		count++
+	}
+	if err := scanner.Err(); err != nil {
+		tx.Rollback()
+		return count, err
+	}
+	return count, tx.Commit()
 }
 
 func DropDB(dbName string) error {

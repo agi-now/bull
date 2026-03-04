@@ -50,6 +50,7 @@ func kvCmd() *cobra.Command {
 	}
 
 	var prefix string
+	var listFormat string
 	list := &cobra.Command{
 		Use:   "list <db>",
 		Short: "List keys",
@@ -59,13 +60,21 @@ func kvCmd() *cobra.Command {
 			if err != nil {
 				return err
 			}
-			for _, p := range pairs {
-				fmt.Printf("%s\t%s\n", p.Key, p.Value)
+			switch listFormat {
+			case "json":
+				enc := json.NewEncoder(os.Stdout)
+				enc.SetIndent("", "  ")
+				return enc.Encode(pairs)
+			default:
+				for _, p := range pairs {
+					fmt.Printf("%s\t%s\n", p.Key, p.Value)
+				}
 			}
 			return nil
 		},
 	}
 	list.Flags().StringVar(&prefix, "prefix", "", "key prefix filter")
+	list.Flags().StringVar(&listFormat, "format", "tsv", "output format: tsv|json")
 
 	dbs := &cobra.Command{
 		Use:   "dbs",
@@ -205,7 +214,44 @@ func kvCmd() *cobra.Command {
 	importJSON.Flags().StringVarP(&importFile, "file", "f", "", "JSON file path")
 	importJSON.MarkFlagRequired("file")
 
+	mget := &cobra.Command{
+		Use:   "mget <db> <key1> <key2> ...",
+		Short: "Get multiple keys at once",
+		Args:  cobra.MinimumNArgs(2),
+		RunE: func(cmd *cobra.Command, args []string) error {
+			pairs, err := kv.MGet(args[0], bucket, args[1:])
+			if err != nil {
+				return err
+			}
+			enc := json.NewEncoder(os.Stdout)
+			enc.SetIndent("", "  ")
+			return enc.Encode(pairs)
+		},
+	}
+
+	mput := &cobra.Command{
+		Use:   "mput <db> <key1> <val1> <key2> <val2> ...",
+		Short: "Put multiple key-value pairs at once",
+		Args:  cobra.MinimumNArgs(3),
+		RunE: func(cmd *cobra.Command, args []string) error {
+			kvArgs := args[1:]
+			if len(kvArgs)%2 != 0 {
+				return fmt.Errorf("expected even number of key-value arguments, got %d", len(kvArgs))
+			}
+			var pairs []kv.KVPair
+			for i := 0; i < len(kvArgs); i += 2 {
+				pairs = append(pairs, kv.KVPair{Key: kvArgs[i], Value: kvArgs[i+1]})
+			}
+			if err := kv.MPut(args[0], bucket, pairs); err != nil {
+				return err
+			}
+			fmt.Printf("put %d pairs\n", len(pairs))
+			return nil
+		},
+	}
+
 	var startKey, endKey string
+	var scanFormat string
 	scan := &cobra.Command{
 		Use:   "scan <db>",
 		Short: "Range scan keys [start, end)",
@@ -215,14 +261,22 @@ func kvCmd() *cobra.Command {
 			if err != nil {
 				return err
 			}
-			for _, p := range pairs {
-				fmt.Printf("%s\t%s\n", p.Key, p.Value)
+			switch scanFormat {
+			case "json":
+				enc := json.NewEncoder(os.Stdout)
+				enc.SetIndent("", "  ")
+				return enc.Encode(pairs)
+			default:
+				for _, p := range pairs {
+					fmt.Printf("%s\t%s\n", p.Key, p.Value)
+				}
 			}
 			return nil
 		},
 	}
 	scan.Flags().StringVar(&startKey, "start", "", "start key (inclusive)")
 	scan.Flags().StringVar(&endKey, "end", "", "end key (exclusive)")
+	scan.Flags().StringVar(&scanFormat, "format", "tsv", "output format: tsv|json")
 
 	dropDB := &cobra.Command{
 		Use:   "drop <db>",
@@ -250,10 +304,10 @@ func kvCmd() *cobra.Command {
 		},
 	}
 
-	for _, c := range []*cobra.Command{put, get, del, list, count, exists, incr, decr, exportJSON, importJSON, scan} {
+	for _, c := range []*cobra.Command{put, get, del, list, count, exists, incr, decr, exportJSON, importJSON, scan, mget, mput} {
 		c.Flags().StringVar(&bucket, "bucket", "", "bucket name (default: \"default\")")
 	}
 
-	cmd.AddCommand(put, get, del, list, dbs, buckets, count, exists, incr, decr, exportJSON, importJSON, scan, dropDB, dropBucket)
+	cmd.AddCommand(put, get, del, list, dbs, buckets, count, exists, incr, decr, exportJSON, importJSON, scan, dropDB, dropBucket, mget, mput)
 	return cmd
 }

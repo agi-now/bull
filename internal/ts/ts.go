@@ -3,6 +3,8 @@ package ts
 import (
 	"bufio"
 	"encoding/json"
+	"fmt"
+	"io"
 	"os"
 	"path/filepath"
 	"time"
@@ -137,6 +139,38 @@ func WriteBatchFromNDJSON(dbName, ndjsonFile string) (int, error) {
 		return 0, err
 	}
 	return WriteBatch(dbName, rows)
+}
+
+func Latest(dbName, metric string, labels map[string]string) (*DataPoint, error) {
+	now := time.Now().Unix()
+	points, err := QueryRange(dbName, metric, now-86400*30, now, labels)
+	if err != nil {
+		return nil, err
+	}
+	if len(points) == 0 {
+		return nil, fmt.Errorf("no data points found for metric %q", metric)
+	}
+	return &points[len(points)-1], nil
+}
+
+func Count(dbName, metric string, from, to int64, labels map[string]string) (int, error) {
+	points, err := QueryRange(dbName, metric, from, to, labels)
+	if err != nil {
+		return 0, err
+	}
+	return len(points), nil
+}
+
+func ExportCSV(dbName, metric string, from, to int64, labels map[string]string, w io.Writer) error {
+	points, err := QueryRange(dbName, metric, from, to, labels)
+	if err != nil {
+		return err
+	}
+	fmt.Fprintln(w, "timestamp,value")
+	for _, p := range points {
+		fmt.Fprintf(w, "%d,%f\n", p.Timestamp, p.Value)
+	}
+	return nil
 }
 
 func DeleteDB(name string) error {
