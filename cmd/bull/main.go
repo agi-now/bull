@@ -26,7 +26,7 @@ var rootCmd = &cobra.Command{
 
 func init() {
 	rootCmd.PersistentFlags().StringVar(&config.DataDir, "data-dir", "./data", "data directory path")
-	rootCmd.AddCommand(kvCmd(), sqlCmd(), graphCmd(), searchCmd(), tsCmd(), versionCmd(), infoCmd())
+	rootCmd.AddCommand(kvCmd(), sqlCmd(), graphCmd(), searchCmd(), tsCmd(), serveCmd(), versionCmd(), infoCmd())
 }
 
 func versionCmd() *cobra.Command {
