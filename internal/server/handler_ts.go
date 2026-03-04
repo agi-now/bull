@@ -4,7 +4,7 @@ import (
 	"bytes"
 	"net/http"
 
-	"github.com/bull-cli/bull/internal/ts"
+	"github.com/agi-now/bull/internal/ts"
 )
 
 func (s *Server) registerTS() {

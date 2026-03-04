@@ -9,7 +9,7 @@ import (
 	"path/filepath"
 	"time"
 
-	"github.com/bull-cli/bull/internal/config"
+	"github.com/agi-now/bull/internal/config"
 	"github.com/nakabonne/tstorage"
 )
 

@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"strings"
 
-	bgraph "github.com/bull-cli/bull/internal/graph"
+	bgraph "github.com/agi-now/bull/internal/graph"
 	"github.com/spf13/cobra"
 )
 

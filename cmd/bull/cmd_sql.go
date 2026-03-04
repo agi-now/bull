@@ -6,7 +6,7 @@ import (
 	"os"
 	"strings"
 
-	bsql "github.com/bull-cli/bull/internal/sql"
+	bsql "github.com/agi-now/bull/internal/sql"
 	"github.com/spf13/cobra"
 )
 

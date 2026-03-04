@@ -44,7 +44,7 @@ All engines are **pure Go** — no CGo, no Wasm, no shared libraries. The binary
 
 ```bash
 # Clone and build
-git clone https://github.com/bull-cli/bull.git && cd bull
+git clone https://github.com/agi-now/bull.git && cd bull
 go build -ldflags="-s -w" -o bull ./cmd/bull/
 
 # Or use build scripts (inject version + build time automatically)

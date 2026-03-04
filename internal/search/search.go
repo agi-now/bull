@@ -9,7 +9,7 @@ import (
 
 	"github.com/blevesearch/bleve/v2"
 	index "github.com/blevesearch/bleve_index_api"
-	"github.com/bull-cli/bull/internal/config"
+	"github.com/agi-now/bull/internal/config"
 )
 
 func indexPath(name string) string {

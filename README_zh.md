@@ -44,7 +44,7 @@ bull ts latest mon cpu --format json      # 时序指标
 
 ```bash
 # 克隆并构建
-git clone https://github.com/bull-cli/bull.git && cd bull
+git clone https://github.com/agi-now/bull.git && cd bull
 go build -ldflags="-s -w" -o bull ./cmd/bull/
 
 # 或使用构建脚本（自动注入版本号和构建时间）

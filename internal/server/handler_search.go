@@ -4,7 +4,7 @@ import (
 	"encoding/json"
 	"net/http"
 
-	"github.com/bull-cli/bull/internal/search"
+	"github.com/agi-now/bull/internal/search"
 )
 
 func (s *Server) registerSearch() {

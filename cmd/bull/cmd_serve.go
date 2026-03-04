@@ -3,7 +3,7 @@ package main
 import (
 	"fmt"
 
-	"github.com/bull-cli/bull/internal/server"
+	"github.com/agi-now/bull/internal/server"
 	"github.com/spf13/cobra"
 )
 

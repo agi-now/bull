@@ -1,4 +1,4 @@
-module github.com/bull-cli/bull
+module github.com/agi-now/bull
 
 go 1.25.0
 

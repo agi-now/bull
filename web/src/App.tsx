@@ -47,7 +47,7 @@ function App() {
           <p>{T('hero_desc')}</p>
           <div className="hero-actions">
             <a href="#start" className="btn-primary">{T('hero_cta')}</a>
-            <a href="https://github.com/bull-cli/bull" target="_blank" rel="noopener" className="btn-secondary">{T('hero_cta2')}</a>
+            <a href="https://github.com/agi-now/bull" target="_blank" rel="noopener" className="btn-secondary">{T('hero_cta2')}</a>
           </div>
 
           <div className="hero-code">
@@ -176,7 +176,7 @@ function App() {
           <div className="get-started-code">
             <pre>
               <span className="comment">{lang === 'en' ? '# Clone & build' : '# 克隆并构建'}</span>{'\n'}
-              <span className="cmd">git clone</span> https://github.com/bull-cli/bull.git{'\n'}
+              <span className="cmd">git clone</span> https://github.com/agi-now/bull.git{'\n'}
               <span className="cmd">cd</span> bull{'\n'}
               <span className="cmd">go build</span> -ldflags=<span className="str">"-s -w"</span> -o bull ./cmd/bull/{'\n'}
               {'\n'}

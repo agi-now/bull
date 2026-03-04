@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"os"
 
-	"github.com/bull-cli/bull/internal/config"
+	"github.com/agi-now/bull/internal/config"
 	"github.com/spf13/cobra"
 )
 

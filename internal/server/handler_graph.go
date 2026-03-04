@@ -4,7 +4,7 @@ import (
 	"encoding/json"
 	"net/http"
 
-	bgraph "github.com/bull-cli/bull/internal/graph"
+	bgraph "github.com/agi-now/bull/internal/graph"
 )
 
 func (s *Server) registerGraph() {

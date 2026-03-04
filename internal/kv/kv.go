@@ -5,7 +5,7 @@ import (
 	"os"
 	"path/filepath"
 
-	"github.com/bull-cli/bull/internal/config"
+	"github.com/agi-now/bull/internal/config"
 	bolt "go.etcd.io/bbolt"
 )
 

@@ -4,7 +4,7 @@ import (
 	"net/http"
 	"strconv"
 
-	bsql "github.com/bull-cli/bull/internal/sql"
+	bsql "github.com/agi-now/bull/internal/sql"
 )
 
 func (s *Server) registerSQL() {

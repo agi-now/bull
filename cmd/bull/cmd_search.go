@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"os"
 
-	"github.com/bull-cli/bull/internal/search"
+	"github.com/agi-now/bull/internal/search"
 	"github.com/spf13/cobra"
 )
 

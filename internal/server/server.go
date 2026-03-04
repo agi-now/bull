@@ -7,11 +7,11 @@ import (
 	"net/http"
 	"runtime"
 
-	"github.com/bull-cli/bull/internal/graph"
-	"github.com/bull-cli/bull/internal/kv"
-	"github.com/bull-cli/bull/internal/search"
-	bsql "github.com/bull-cli/bull/internal/sql"
-	"github.com/bull-cli/bull/internal/ts"
+	"github.com/agi-now/bull/internal/graph"
+	"github.com/agi-now/bull/internal/kv"
+	"github.com/agi-now/bull/internal/search"
+	bsql "github.com/agi-now/bull/internal/sql"
+	"github.com/agi-now/bull/internal/ts"
 )
 
 type Server struct {

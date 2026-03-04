@@ -8,7 +8,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/bull-cli/bull/internal/ts"
+	"github.com/agi-now/bull/internal/ts"
 	"github.com/spf13/cobra"
 )
 

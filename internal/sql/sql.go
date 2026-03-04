@@ -11,7 +11,7 @@ import (
 	"path/filepath"
 	"strings"
 
-	"github.com/bull-cli/bull/internal/config"
+	"github.com/agi-now/bull/internal/config"
 	_ "modernc.org/sqlite"
 )
 

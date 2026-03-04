@@ -4,7 +4,7 @@ import (
 	"os"
 	"testing"
 
-	"github.com/bull-cli/bull/internal/config"
+	"github.com/agi-now/bull/internal/config"
 )
 
 func setup(t *testing.T) {

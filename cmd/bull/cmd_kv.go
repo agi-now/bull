@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"os"
 
-	"github.com/bull-cli/bull/internal/kv"
+	"github.com/agi-now/bull/internal/kv"
 	"github.com/spf13/cobra"
 )
 
