@@ -1,10 +1,12 @@
 package graph
 
 import (
+	"bufio"
 	"encoding/json"
 	"fmt"
 	"os"
 	"path/filepath"
+	"strings"
 
 	"github.com/bull-cli/bull/internal/config"
 	gr "github.com/dominikbraun/graph"
@@ -207,6 +209,105 @@ func EdgeList(name string, directed bool) ([]EdgeInfo, error) {
 	return result, nil
 }
 
+func RemoveVertex(name string, directed bool, id string) error {
+	g, err := Load(name, directed)
+	if err != nil {
+		return err
+	}
+	if err := g.RemoveVertex(id); err != nil {
+		return err
+	}
+	return Save(name, g, directed)
+}
+
+func RemoveEdge(name string, directed bool, from, to string) error {
+	g, err := Load(name, directed)
+	if err != nil {
+		return err
+	}
+	if err := g.RemoveEdge(from, to); err != nil {
+		return err
+	}
+	return Save(name, g, directed)
+}
+
+func Neighbors(name string, directed bool, id string) ([]string, error) {
+	g, err := Load(name, directed)
+	if err != nil {
+		return nil, err
+	}
+	adjMap, err := g.AdjacencyMap()
+	if err != nil {
+		return nil, err
+	}
+	edgesMap, ok := adjMap[id]
+	if !ok {
+		return nil, fmt.Errorf("vertex %q not found", id)
+	}
+	var result []string
+	for target := range edgesMap {
+		result = append(result, target)
+	}
+	return result, nil
+}
+
+func Degree(name string, directed bool, id string) (int, error) {
+	g, err := Load(name, directed)
+	if err != nil {
+		return 0, err
+	}
+	adjMap, err := g.AdjacencyMap()
+	if err != nil {
+		return 0, err
+	}
+	edgesMap, ok := adjMap[id]
+	if !ok {
+		return 0, fmt.Errorf("vertex %q not found", id)
+	}
+	return len(edgesMap), nil
+}
+
+func HasPath(name string, directed bool, from, to string) (bool, error) {
+	path, err := ShortestPath(name, directed, from, to)
+	if err != nil {
+		return false, nil
+	}
+	return len(path) > 0, nil
+}
+
+type GraphStats struct {
+	VertexCount int `json:"vertex_count"`
+	EdgeCount   int `json:"edge_count"`
+}
+
+func Stats(name string, directed bool) (*GraphStats, error) {
+	g, err := Load(name, directed)
+	if err != nil {
+		return nil, err
+	}
+	adjMap, err := g.AdjacencyMap()
+	if err != nil {
+		return nil, err
+	}
+	edges, _ := g.Edges()
+	return &GraphStats{
+		VertexCount: len(adjMap),
+		EdgeCount:   len(edges),
+	}, nil
+}
+
+func VertexAttrs(name string, directed bool, id string) (map[string]string, error) {
+	g, err := Load(name, directed)
+	if err != nil {
+		return nil, err
+	}
+	_, props, err := g.VertexWithProperties(id)
+	if err != nil {
+		return nil, err
+	}
+	return props.Attributes, nil
+}
+
 func ListDBs() ([]string, error) {
 	pattern := filepath.Join(config.GraphDir(), "*.json")
 	matches, err := filepath.Glob(pattern)
@@ -221,5 +322,65 @@ func ListDBs() ([]string, error) {
 	return names, nil
 }
 
-// unused but keeps import
-var _ = fmt.Sprintf
+func DropDB(name string) error {
+	return os.Remove(dbPath(name))
+}
+
+func ImportCSV(name string, directed bool, csvFile string) (int, int, error) {
+	f, err := os.Open(csvFile)
+	if err != nil {
+		return 0, 0, err
+	}
+	defer f.Close()
+
+	g, err := Load(name, directed)
+	if err != nil {
+		return 0, 0, err
+	}
+
+	scanner := bufio.NewScanner(f)
+	vCount, eCount := 0, 0
+
+	for scanner.Scan() {
+		line := strings.TrimSpace(scanner.Text())
+		if line == "" || strings.HasPrefix(line, "#") {
+			continue
+		}
+		parts := strings.Split(line, ",")
+		if len(parts) < 2 {
+			continue
+		}
+		from := strings.TrimSpace(parts[0])
+		to := strings.TrimSpace(parts[1])
+		weight := 0
+		if len(parts) >= 3 {
+			fmt.Sscanf(strings.TrimSpace(parts[2]), "%d", &weight)
+		}
+
+		if err := g.AddVertex(from); err != nil && err != gr.ErrVertexAlreadyExists {
+			return vCount, eCount, err
+		} else if err == nil {
+			vCount++
+		}
+		if err := g.AddVertex(to); err != nil && err != gr.ErrVertexAlreadyExists {
+			return vCount, eCount, err
+		} else if err == nil {
+			vCount++
+		}
+		opts := []func(*gr.EdgeProperties){gr.EdgeWeight(weight)}
+		if err := g.AddEdge(from, to, opts...); err != nil && err != gr.ErrEdgeAlreadyExists {
+			return vCount, eCount, err
+		} else if err == nil {
+			eCount++
+		}
+	}
+	if err := scanner.Err(); err != nil {
+		return vCount, eCount, err
+	}
+	return vCount, eCount, Save(name, g, directed)
+}
+
+func ExportJSON(name string, directed bool) ([]byte, error) {
+	path := dbPath(name)
+	return os.ReadFile(path)
+}

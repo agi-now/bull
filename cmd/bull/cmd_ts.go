@@ -97,6 +97,33 @@ func tsCmd() *cobra.Command {
 		},
 	}
 
-	cmd.AddCommand(write, query, dbs)
+	bulk := &cobra.Command{
+		Use:   "bulk <db> <ndjson-file>",
+		Short: "Bulk write data points from NDJSON file",
+		Args:  cobra.ExactArgs(2),
+		RunE: func(cmd *cobra.Command, args []string) error {
+			count, err := ts.WriteBatchFromNDJSON(args[0], args[1])
+			if err != nil {
+				return err
+			}
+			fmt.Printf("wrote %d data points\n", count)
+			return nil
+		},
+	}
+
+	deleteDB := &cobra.Command{
+		Use:   "drop <db>",
+		Short: "Delete a TS database",
+		Args:  cobra.ExactArgs(1),
+		RunE: func(cmd *cobra.Command, args []string) error {
+			if err := ts.DeleteDB(args[0]); err != nil {
+				return err
+			}
+			fmt.Printf("dropped %s\n", args[0])
+			return nil
+		},
+	}
+
+	cmd.AddCommand(write, query, dbs, bulk, deleteDB)
 	return cmd
 }

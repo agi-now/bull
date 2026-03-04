@@ -2,6 +2,7 @@ package kv
 
 import (
 	"fmt"
+	"os"
 	"path/filepath"
 
 	"github.com/bull-cli/bull/internal/config"
@@ -122,6 +123,172 @@ func List(dbName, bucket, prefix string) ([]KVPair, error) {
 		return nil
 	})
 	return pairs, err
+}
+
+func ListBuckets(dbName string) ([]string, error) {
+	db, err := openDB(dbName)
+	if err != nil {
+		return nil, err
+	}
+	defer db.Close()
+
+	var names []string
+	err = db.View(func(tx *bolt.Tx) error {
+		return tx.ForEach(func(name []byte, _ *bolt.Bucket) error {
+			names = append(names, string(name))
+			return nil
+		})
+	})
+	return names, err
+}
+
+func Count(dbName, bucket string) (int, error) {
+	db, err := openDB(dbName)
+	if err != nil {
+		return 0, err
+	}
+	defer db.Close()
+
+	b := []byte(bucket)
+	if bucket == "" {
+		b = defaultBucket
+	}
+	var count int
+	err = db.View(func(tx *bolt.Tx) error {
+		bkt := tx.Bucket(b)
+		if bkt == nil {
+			return nil
+		}
+		count = bkt.Stats().KeyN
+		return nil
+	})
+	return count, err
+}
+
+func ExportJSON(dbName, bucket string) ([]KVPair, error) {
+	return List(dbName, bucket, "")
+}
+
+func ImportJSON(dbName, bucket string, pairs []KVPair) error {
+	db, err := openDB(dbName)
+	if err != nil {
+		return err
+	}
+	defer db.Close()
+
+	b := []byte(bucket)
+	if bucket == "" {
+		b = defaultBucket
+	}
+	return db.Update(func(tx *bolt.Tx) error {
+		bkt, err := tx.CreateBucketIfNotExists(b)
+		if err != nil {
+			return err
+		}
+		for _, p := range pairs {
+			if err := bkt.Put([]byte(p.Key), []byte(p.Value)); err != nil {
+				return err
+			}
+		}
+		return nil
+	})
+}
+
+func Exists(dbName, bucket, key string) (bool, error) {
+	db, err := openDB(dbName)
+	if err != nil {
+		return false, err
+	}
+	defer db.Close()
+
+	b := []byte(bucket)
+	if bucket == "" {
+		b = defaultBucket
+	}
+	var found bool
+	err = db.View(func(tx *bolt.Tx) error {
+		bkt := tx.Bucket(b)
+		if bkt == nil {
+			return nil
+		}
+		found = bkt.Get([]byte(key)) != nil
+		return nil
+	})
+	return found, err
+}
+
+func Incr(dbName, bucket, key string, delta int64) (int64, error) {
+	db, err := openDB(dbName)
+	if err != nil {
+		return 0, err
+	}
+	defer db.Close()
+
+	b := []byte(bucket)
+	if bucket == "" {
+		b = defaultBucket
+	}
+	var newVal int64
+	err = db.Update(func(tx *bolt.Tx) error {
+		bkt, err := tx.CreateBucketIfNotExists(b)
+		if err != nil {
+			return err
+		}
+		v := bkt.Get([]byte(key))
+		var cur int64
+		if v != nil {
+			fmt.Sscanf(string(v), "%d", &cur)
+		}
+		newVal = cur + delta
+		return bkt.Put([]byte(key), []byte(fmt.Sprintf("%d", newVal)))
+	})
+	return newVal, err
+}
+
+func Scan(dbName, bucket, startKey, endKey string) ([]KVPair, error) {
+	db, err := openDB(dbName)
+	if err != nil {
+		return nil, err
+	}
+	defer db.Close()
+
+	b := []byte(bucket)
+	if bucket == "" {
+		b = defaultBucket
+	}
+	var pairs []KVPair
+	err = db.View(func(tx *bolt.Tx) error {
+		bkt := tx.Bucket(b)
+		if bkt == nil {
+			return nil
+		}
+		c := bkt.Cursor()
+		start := []byte(startKey)
+		for k, v := c.Seek(start); k != nil; k, v = c.Next() {
+			if len(endKey) > 0 && string(k) > endKey {
+				break
+			}
+			pairs = append(pairs, KVPair{Key: string(k), Value: string(v)})
+		}
+		return nil
+	})
+	return pairs, err
+}
+
+func DropDB(dbName string) error {
+	return os.Remove(dbPath(dbName))
+}
+
+func DropBucket(dbName, bucket string) error {
+	db, err := openDB(dbName)
+	if err != nil {
+		return err
+	}
+	defer db.Close()
+
+	return db.Update(func(tx *bolt.Tx) error {
+		return tx.DeleteBucket([]byte(bucket))
+	})
 }
 
 func ListDBs() ([]string, error) {

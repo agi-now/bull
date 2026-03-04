@@ -74,6 +74,45 @@ func sqlCmd() *cobra.Command {
 				if line == ".quit" || line == ".exit" {
 					break
 				}
+				if line == ".tables" {
+					names, err := bsql.Tables(dbName)
+					if err != nil {
+						fmt.Fprintf(os.Stderr, "error: %v\n", err)
+					} else {
+						for _, n := range names {
+							fmt.Println(n)
+						}
+					}
+					continue
+				}
+				if strings.HasPrefix(line, ".schema") {
+					parts := strings.Fields(line)
+					if len(parts) < 2 {
+						fmt.Fprintln(os.Stderr, "usage: .schema <table>")
+					} else {
+						ddl, err := bsql.Schema(dbName, parts[1])
+						if err != nil {
+							fmt.Fprintf(os.Stderr, "error: %v\n", err)
+						} else {
+							fmt.Println(ddl)
+						}
+					}
+					continue
+				}
+				if strings.HasPrefix(line, ".count") {
+					parts := strings.Fields(line)
+					if len(parts) < 2 {
+						fmt.Fprintln(os.Stderr, "usage: .count <table>")
+					} else {
+						n, err := bsql.CountRows(dbName, parts[1])
+						if err != nil {
+							fmt.Fprintf(os.Stderr, "error: %v\n", err)
+						} else {
+							fmt.Println(n)
+						}
+					}
+					continue
+				}
 				upper := strings.ToUpper(line)
 				if strings.HasPrefix(upper, "SELECT") || strings.HasPrefix(upper, "PRAGMA") || strings.HasPrefix(upper, "EXPLAIN") {
 					result, err := bsql.Query(dbName, line)
@@ -144,6 +183,89 @@ func sqlCmd() *cobra.Command {
 		},
 	}
 
-	cmd.AddCommand(exec, query, shell, importCmd, export, dbs)
+	tables := &cobra.Command{
+		Use:   "tables <db>",
+		Short: "List all tables",
+		Args:  cobra.ExactArgs(1),
+		RunE: func(cmd *cobra.Command, args []string) error {
+			names, err := bsql.Tables(args[0])
+			if err != nil {
+				return err
+			}
+			for _, n := range names {
+				fmt.Println(n)
+			}
+			return nil
+		},
+	}
+
+	schema := &cobra.Command{
+		Use:   "schema <db> <table>",
+		Short: "Show CREATE TABLE statement",
+		Args:  cobra.ExactArgs(2),
+		RunE: func(cmd *cobra.Command, args []string) error {
+			ddl, err := bsql.Schema(args[0], args[1])
+			if err != nil {
+				return err
+			}
+			fmt.Println(ddl)
+			return nil
+		},
+	}
+
+	countRows := &cobra.Command{
+		Use:   "count <db> <table>",
+		Short: "Count rows in a table",
+		Args:  cobra.ExactArgs(2),
+		RunE: func(cmd *cobra.Command, args []string) error {
+			n, err := bsql.CountRows(args[0], args[1])
+			if err != nil {
+				return err
+			}
+			fmt.Println(n)
+			return nil
+		},
+	}
+
+	execFile := &cobra.Command{
+		Use:   "exec-file <db> <file.sql>",
+		Short: "Execute SQL from a file",
+		Args:  cobra.ExactArgs(2),
+		RunE: func(cmd *cobra.Command, args []string) error {
+			if err := bsql.ExecFile(args[0], args[1]); err != nil {
+				return err
+			}
+			fmt.Println("ok")
+			return nil
+		},
+	}
+
+	importJSONCmd := &cobra.Command{
+		Use:   "import-json <db> <table> <file.json>",
+		Short: "Import JSON array into table",
+		Args:  cobra.ExactArgs(3),
+		RunE: func(cmd *cobra.Command, args []string) error {
+			if err := bsql.ImportJSON(args[0], args[1], args[2]); err != nil {
+				return err
+			}
+			fmt.Println("ok")
+			return nil
+		},
+	}
+
+	dropDB := &cobra.Command{
+		Use:   "drop <db>",
+		Short: "Delete a SQL database file",
+		Args:  cobra.ExactArgs(1),
+		RunE: func(cmd *cobra.Command, args []string) error {
+			if err := bsql.DropDB(args[0]); err != nil {
+				return err
+			}
+			fmt.Printf("dropped %s\n", args[0])
+			return nil
+		},
+	}
+
+	cmd.AddCommand(exec, query, shell, importCmd, export, dbs, tables, schema, countRows, execFile, importJSONCmd, dropDB)
 	return cmd
 }

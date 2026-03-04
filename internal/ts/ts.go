@@ -1,6 +1,8 @@
 package ts
 
 import (
+	"bufio"
+	"encoding/json"
 	"os"
 	"path/filepath"
 	"time"
@@ -74,6 +76,71 @@ func QueryRange(dbName, metric string, from, to int64, labels map[string]string)
 		result = append(result, DataPoint{Timestamp: p.Timestamp, Value: p.Value})
 	}
 	return result, nil
+}
+
+type BatchRow struct {
+	Metric    string            `json:"metric"`
+	Value     float64           `json:"value"`
+	Timestamp int64             `json:"timestamp,omitempty"`
+	Labels    map[string]string `json:"labels,omitempty"`
+}
+
+func WriteBatch(dbName string, rows []BatchRow) (int, error) {
+	s, err := openStorage(dbName)
+	if err != nil {
+		return 0, err
+	}
+	defer s.Close()
+
+	now := time.Now().Unix()
+	var tsRows []tstorage.Row
+	for _, r := range rows {
+		ts := r.Timestamp
+		if ts == 0 {
+			ts = now
+		}
+		var labels []tstorage.Label
+		for k, v := range r.Labels {
+			labels = append(labels, tstorage.Label{Name: k, Value: v})
+		}
+		tsRows = append(tsRows, tstorage.Row{
+			Metric:    r.Metric,
+			Labels:    labels,
+			DataPoint: tstorage.DataPoint{Timestamp: ts, Value: r.Value},
+		})
+	}
+	return len(tsRows), s.InsertRows(tsRows)
+}
+
+func WriteBatchFromNDJSON(dbName, ndjsonFile string) (int, error) {
+	f, err := os.Open(ndjsonFile)
+	if err != nil {
+		return 0, err
+	}
+	defer f.Close()
+
+	var rows []BatchRow
+	scanner := bufio.NewScanner(f)
+	scanner.Buffer(make([]byte, 1024*1024), 1024*1024)
+	for scanner.Scan() {
+		line := scanner.Bytes()
+		if len(line) == 0 {
+			continue
+		}
+		var row BatchRow
+		if err := json.Unmarshal(line, &row); err != nil {
+			return len(rows), err
+		}
+		rows = append(rows, row)
+	}
+	if err := scanner.Err(); err != nil {
+		return 0, err
+	}
+	return WriteBatch(dbName, rows)
+}
+
+func DeleteDB(name string) error {
+	return os.RemoveAll(filepath.Join(config.TSDir(), name))
 }
 
 func ListDBs() ([]string, error) {

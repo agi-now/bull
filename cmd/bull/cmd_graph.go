@@ -151,10 +151,146 @@ func graphCmd() *cobra.Command {
 		},
 	}
 
-	for _, c := range []*cobra.Command{addVertex, addEdge, shortestPath, dfs, bfs, vertices, edges} {
+	delVertex := &cobra.Command{
+		Use:   "del-vertex <db> <id>",
+		Short: "Remove a vertex and its edges",
+		Args:  cobra.ExactArgs(2),
+		RunE: func(cmd *cobra.Command, args []string) error {
+			return bgraph.RemoveVertex(args[0], directed(), args[1])
+		},
+	}
+
+	delEdge := &cobra.Command{
+		Use:   "del-edge <db> <from> <to>",
+		Short: "Remove an edge",
+		Args:  cobra.ExactArgs(3),
+		RunE: func(cmd *cobra.Command, args []string) error {
+			return bgraph.RemoveEdge(args[0], directed(), args[1], args[2])
+		},
+	}
+
+	neighbors := &cobra.Command{
+		Use:   "neighbors <db> <vertex>",
+		Short: "List neighbors of a vertex",
+		Args:  cobra.ExactArgs(2),
+		RunE: func(cmd *cobra.Command, args []string) error {
+			result, err := bgraph.Neighbors(args[0], directed(), args[1])
+			if err != nil {
+				return err
+			}
+			for _, v := range result {
+				fmt.Println(v)
+			}
+			return nil
+		},
+	}
+
+	degree := &cobra.Command{
+		Use:   "degree <db> <vertex>",
+		Short: "Get degree of a vertex",
+		Args:  cobra.ExactArgs(2),
+		RunE: func(cmd *cobra.Command, args []string) error {
+			n, err := bgraph.Degree(args[0], directed(), args[1])
+			if err != nil {
+				return err
+			}
+			fmt.Println(n)
+			return nil
+		},
+	}
+
+	hasPath := &cobra.Command{
+		Use:   "has-path <db> <from> <to>",
+		Short: "Check if a path exists between two vertices",
+		Args:  cobra.ExactArgs(3),
+		RunE: func(cmd *cobra.Command, args []string) error {
+			ok, err := bgraph.HasPath(args[0], directed(), args[1], args[2])
+			if err != nil {
+				return err
+			}
+			fmt.Println(ok)
+			return nil
+		},
+	}
+
+	stats := &cobra.Command{
+		Use:   "stats <db>",
+		Short: "Show graph statistics",
+		Args:  cobra.ExactArgs(1),
+		RunE: func(cmd *cobra.Command, args []string) error {
+			s, err := bgraph.Stats(args[0], directed())
+			if err != nil {
+				return err
+			}
+			fmt.Printf("vertices: %d\nedges: %d\n", s.VertexCount, s.EdgeCount)
+			return nil
+		},
+	}
+
+	vertexAttrs := &cobra.Command{
+		Use:   "attrs <db> <vertex>",
+		Short: "Show vertex attributes",
+		Args:  cobra.ExactArgs(2),
+		RunE: func(cmd *cobra.Command, args []string) error {
+			attrs, err := bgraph.VertexAttrs(args[0], directed(), args[1])
+			if err != nil {
+				return err
+			}
+			for k, v := range attrs {
+				fmt.Printf("%s=%s\n", k, v)
+			}
+			return nil
+		},
+	}
+
+	importCSV := &cobra.Command{
+		Use:   "import-csv <db> <file.csv>",
+		Short: "Import edges from CSV (from,to[,weight])",
+		Args:  cobra.ExactArgs(2),
+		RunE: func(cmd *cobra.Command, args []string) error {
+			v, e, err := bgraph.ImportCSV(args[0], directed(), args[1])
+			if err != nil {
+				return err
+			}
+			fmt.Printf("added %d vertices, %d edges\n", v, e)
+			return nil
+		},
+	}
+
+	exportJSON := &cobra.Command{
+		Use:   "export <db>",
+		Short: "Export graph as JSON",
+		Args:  cobra.ExactArgs(1),
+		RunE: func(cmd *cobra.Command, args []string) error {
+			data, err := bgraph.ExportJSON(args[0], directed())
+			if err != nil {
+				return err
+			}
+			fmt.Println(string(data))
+			return nil
+		},
+	}
+
+	dropDB := &cobra.Command{
+		Use:   "drop <db>",
+		Short: "Delete a graph",
+		Args:  cobra.ExactArgs(1),
+		RunE: func(cmd *cobra.Command, args []string) error {
+			if err := bgraph.DropDB(args[0]); err != nil {
+				return err
+			}
+			fmt.Printf("dropped %s\n", args[0])
+			return nil
+		},
+	}
+
+	allCmds := []*cobra.Command{addVertex, addEdge, shortestPath, dfs, bfs, vertices, edges,
+		delVertex, delEdge, neighbors, degree, hasPath, stats, vertexAttrs, importCSV, exportJSON, dropDB}
+	for _, c := range allCmds {
 		c.Flags().BoolVar(&undirected, "undirected", false, "use undirected graph")
 	}
 
-	cmd.AddCommand(addVertex, addEdge, shortestPath, dfs, bfs, vertices, edges, dbs)
+	cmd.AddCommand(allCmds...)
+	cmd.AddCommand(dbs)
 	return cmd
 }
