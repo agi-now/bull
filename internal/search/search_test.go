@@ -173,8 +173,8 @@ func TestDropIndex(t *testing.T) {
 	if err := DropIndex("idx"); err != nil {
 		t.Fatal(err)
 	}
-	if _, err := os.Stat(indexPath("idx")); !os.IsNotExist(err) {
-		t.Fatal("expected index dir to be removed")
+	if _, err := os.Stat(dbPath("idx")); !os.IsNotExist(err) {
+		t.Fatal("expected db file to be removed")
 	}
 }
 

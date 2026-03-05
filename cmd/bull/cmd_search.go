@@ -12,7 +12,7 @@ import (
 func searchCmd() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "search",
-		Short: "Full-text search operations (bleve)",
+		Short: "Full-text search operations (SQLite FTS5)",
 	}
 
 	create := &cobra.Command{

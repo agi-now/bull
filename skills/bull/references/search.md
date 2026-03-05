@@ -1,8 +1,8 @@
 # Search Engine Reference
 
-Embedded full-text search powered by bleve. Index JSON documents, query with scoring, field return, and pagination.
+Embedded full-text search powered by SQLite FTS5. Index JSON documents, query with scoring, field return, and pagination.
 
-An index must be created before indexing documents. Query syntax: `field:value`, `+required`, `-excluded`, `"exact phrase"`, `term*` wildcards.
+An index must be created before indexing documents. Query syntax follows FTS5: `term`, `term1 AND term2`, `term1 OR term2`, `NOT term`, `"exact phrase"`, `term*` prefix.
 
 ## Commands
 
@@ -33,7 +33,7 @@ bull search query <index> <query> [--field name ...] [--limit N] [--offset N] [-
 ```
 Search with pagination. Returns IDs, scores, and optionally field values.
 ```bash
-bull search query articles "title:kubernetes" --field title --field author --limit 5 --format json
+bull search query articles "kubernetes" --field title --field author --limit 5 --format json
 ```
 
 ### get

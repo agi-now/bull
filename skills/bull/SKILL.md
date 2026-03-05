@@ -1,6 +1,6 @@
 ---
 name: bull
-description: "Micro data environment in a single ~18MB binary — KV store, SQL database, graph analysis, full-text search, and time-series storage, all out of the box. No servers to install, no dependencies to manage. TRIGGER when: user needs local data storage, CSV/JSON analysis, graph traversal, full-text search, metrics recording, persistent state between agent steps, or building data pipelines. CLI-driven, scriptable, pipe-friendly."
+description: "Micro data environment in a single ~8MB binary — KV store, SQL database, graph analysis, full-text search, and time-series storage, all out of the box. No servers to install, no dependencies to manage. TRIGGER when: user needs local data storage, CSV/JSON analysis, graph traversal, full-text search, metrics recording, persistent state between agent steps, or building data pipelines. CLI-driven, scriptable, pipe-friendly."
 license: Apache-2.0
 compatibility: "Requires the bull binary in PATH. Supports linux/amd64, linux/arm64, darwin/amd64, darwin/arm64, windows/amd64."
 repository: https://github.com/agi-now/bull
@@ -23,7 +23,7 @@ metadata:
 
 # Bull — Micro Data Environment, One Binary
 
-Bull is a self-contained data environment in a single static binary. Five embedded engines — KV, SQL, Graph, Search, Time-Series — ready to use the moment you download it. No databases to install, no servers to configure, no dependencies to chase. Just `bull` and your data.
+Bull is a self-contained data environment in a single ~8MB static binary. Five embedded engines — KV, SQL, Graph, Search, Time-Series — ready to use the moment you download it. No databases to install, no servers to configure, no dependencies to chase. Just `bull` and your data.
 
 Use CLI to build data pipelines step by step — scriptable, pipe-friendly, and perfect for agent workflows that persist state, analyze, and query — all locally.
 
@@ -53,7 +53,7 @@ bull version
 | **kv** | bbolt (B+tree) | Persistent key-value storage with buckets, counters, batch ops |
 | **sql** | SQLite (pure Go) | Full SQL — import CSV/JSON, query, join, aggregate, export |
 | **graph** | dominikbraun/graph | Directed/undirected graphs — shortest path, DFS/BFS, cycle detection, toposort |
-| **search** | bleve | Full-text search — index JSON documents, query with scoring and field return |
+| **search** | SQLite FTS5 | Full-text search — index JSON documents, query with scoring and field return |
 | **ts** | tstorage | Time-series — write metrics with labels, range query, export CSV |
 
 ## Agent Strategy: Offload to Bull, Save Tokens
@@ -163,7 +163,7 @@ For the complete command list of each engine, read the corresponding reference f
 - [references/kv.md](references/kv.md) — 17 commands: put, get, del, mget, mput, list, scan, exists, count, incr, decr, buckets, export, import, drop, drop-bucket, dbs
 - [references/sql.md](references/sql.md) — 15 commands: exec, query, exec-file, tables, schema, describe, count, import, import-json, import-ndjson, export, shell, drop, dbs
 - [references/graph.md](references/graph.md) — 21 commands: add-vertex, add-edge, del-vertex, del-edge, vertices, edges, neighbors, degree, attrs, shortest-path, has-path, dfs, bfs, stats, components, toposort, has-cycle, import-csv, export, drop, dbs
-- [references/search.md](references/search.md) — 11 commands: create, index, bulk, query, get, update, delete, info, drop, dbs
+- [references/search.md](references/search.md) — 10 commands: create, index, bulk, query, get, update, delete, info, drop, dbs
 - [references/ts.md](references/ts.md) — 8 commands: write, bulk, query, latest, count, export, drop, dbs
 
 ## Edge Cases

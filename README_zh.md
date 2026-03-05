@@ -1,5 +1,5 @@
 <p align="center">
-  <img src="https://img.shields.io/badge/体积-~20MB-blue?style=flat-square" />
+  <img src="https://img.shields.io/badge/体积-~8MB-blue?style=flat-square" />
   <img src="https://img.shields.io/badge/引擎-5个-green?style=flat-square" />
   <img src="https://img.shields.io/badge/命令-72+-orange?style=flat-square" />
   <img src="https://img.shields.io/badge/CGo-无依赖-brightgreen?style=flat-square" />
@@ -16,7 +16,7 @@
 
 五个数据引擎，一个静态二进制，零外部依赖。
 
-**Bull** 将 KV 存储、SQL 数据库、图引擎、全文搜索和时序存储打包进一个约 20 MB 的 Go 可执行文件。它专为 **AI Agent 技能扩展** 设计——将二进制丢入任何受限环境，即刻获得本地数据处理能力，无需安装任何数据库服务。
+**Bull** 将 KV 存储、SQL 数据库、图引擎、全文搜索和时序存储打包进一个约 8 MB 的 Go 可执行文件。它专为 **AI Agent 技能扩展** 设计——将二进制丢入任何受限环境，即刻获得本地数据处理能力，无需安装任何数据库服务。
 
 ## 为什么选择 Bull?
 
@@ -43,7 +43,7 @@ bull ts latest mon cpu --format json      # 时序指标
 | **KV** | [bbolt](https://github.com/etcd-io/bbolt) | B+tree 键值存储——桶管理、批量操作、原子计数器、范围扫描、JSON 导入导出 |
 | **SQL** | [modernc.org/sqlite](https://pkg.go.dev/modernc.org/sqlite) | 纯 Go 的完整 SQLite——CSV/JSON/NDJSON 导入、多格式查询输出、交互式 Shell |
 | **Graph** | [dominikbraun/graph](https://github.com/dominikbraun/graph) | 有向/无向加权图——最短路径、DFS/BFS、拓扑排序、环检测、连通分量 |
-| **Search** | [bleve](https://github.com/blevesearch/bleve) | 全文索引——评分查询、字段返回、分页、NDJSON 批量索引 |
+| **Search** | SQLite FTS5 | 全文索引——评分查询、字段返回、分页、NDJSON 批量索引 |
 | **TS** | [tstorage](https://github.com/nakabonne/tstorage) | 时序存储——带标签的指标、范围查询、最新值查询、CSV 导出 |
 
 所有引擎均为**纯 Go 实现**——无 CGo、无 Wasm、无动态库。二进制完全静态编译。
@@ -259,7 +259,7 @@ bull/
 │   ├── kv/                bbolt 封装
 │   ├── sql/               SQLite 封装
 │   ├── graph/             图算法封装
-│   ├── search/            bleve 封装
+│   ├── search/            FTS5 全文搜索封装
 │   └── ts/                tstorage 封装
 ├── skills/                AI Agent 技能定义
 ├── build.sh / build.ps1   带版本注入的构建脚本
@@ -273,7 +273,7 @@ bull/
 | KV | `data/kv/<name>.db` | bbolt B+tree |
 | SQL | `data/sql/<name>.db` | SQLite |
 | Graph | `data/graph/<name>.json` | JSON |
-| Search | `data/search/<name>.bleve/` | bleve 索引 |
+| Search | `data/search/<name>.db` | SQLite FTS5 |
 | TS | `data/ts/<name>/` | tstorage WAL |
 
 ## 平台支持

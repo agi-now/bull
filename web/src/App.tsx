@@ -56,7 +56,7 @@ function App() {
 
           <div className="stats-row">
             <div className="stat-item">
-              <div className="stat-num">~18 MB</div>
+              <div className="stat-num">~8 MB</div>
               <div className="stat-label">{lang === 'en' ? 'Binary Size' : '二进制体积'}</div>
             </div>
             <div className="stat-item">

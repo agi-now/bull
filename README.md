@@ -1,5 +1,5 @@
 <p align="center">
-  <img src="https://img.shields.io/badge/binary-~20MB-blue?style=flat-square" />
+  <img src="https://img.shields.io/badge/binary-~8MB-blue?style=flat-square" />
   <img src="https://img.shields.io/badge/engines-5-green?style=flat-square" />
   <img src="https://img.shields.io/badge/commands-72+-orange?style=flat-square" />
   <img src="https://img.shields.io/badge/CGo-none-brightgreen?style=flat-square" />
@@ -16,7 +16,7 @@
 
 Five data engines. One static binary. Zero external dependencies.
 
-**Bull** packs a KV store, SQL database, graph engine, full-text search, and time-series storage into a single ~20 MB Go executable. It is purpose-built for **AI Agent skill extensions** — drop the binary into any sandboxed environment and instantly unlock local data processing capabilities that would normally require installing multiple database servers.
+**Bull** packs a KV store, SQL database, graph engine, full-text search, and time-series storage into a single ~8 MB Go executable. It is purpose-built for **AI Agent skill extensions** — drop the binary into any sandboxed environment and instantly unlock local data processing capabilities that would normally require installing multiple database servers.
 
 ## Why Bull?
 
@@ -43,7 +43,7 @@ bull ts latest mon cpu --format json      # time-series metrics
 | **KV** | [bbolt](https://github.com/etcd-io/bbolt) | B+tree KV store — buckets, batch ops, atomic counters, range scans, JSON import/export |
 | **SQL** | [modernc.org/sqlite](https://pkg.go.dev/modernc.org/sqlite) | Full SQLite in pure Go — CSV/JSON/NDJSON import, multi-format query output, interactive shell |
 | **Graph** | [dominikbraun/graph](https://github.com/dominikbraun/graph) | Directed & undirected weighted graphs — shortest path, DFS/BFS, topological sort, cycle detection, connected components |
-| **Search** | [bleve](https://github.com/blevesearch/bleve) | Full-text indexing — scored queries, field return, pagination, bulk NDJSON indexing |
+| **Search** | SQLite FTS5 | Full-text indexing — scored queries, field return, pagination, bulk NDJSON indexing |
 | **TS** | [tstorage](https://github.com/nakabonne/tstorage) | Time-series storage — labeled metrics, range queries, latest-point lookup, CSV export |
 
 All engines are **pure Go** — no CGo, no Wasm, no shared libraries. The binary is fully statically compiled.
@@ -259,7 +259,7 @@ bull/
 │   ├── kv/                bbolt wrapper
 │   ├── sql/               SQLite wrapper
 │   ├── graph/             graph algorithms
-│   ├── search/            bleve wrapper
+│   ├── search/            FTS5 search wrapper
 │   └── ts/                tstorage wrapper
 ├── skills/                AI Agent skill definitions
 ├── build.sh / build.ps1   build with version injection
@@ -273,7 +273,7 @@ bull/
 | KV | `data/kv/<name>.db` | bbolt B+tree |
 | SQL | `data/sql/<name>.db` | SQLite |
 | Graph | `data/graph/<name>.json` | JSON |
-| Search | `data/search/<name>.bleve/` | bleve index |
+| Search | `data/search/<name>.db` | SQLite FTS5 |
 | TS | `data/ts/<name>/` | tstorage WAL |
 
 ## Platform Support
