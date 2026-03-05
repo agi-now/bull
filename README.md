@@ -6,7 +6,7 @@
   <img src="https://img.shields.io/badge/platforms-linux%20%7C%20macOS%20%7C%20windows-lightgrey?style=flat-square" />
 </p>
 
-<p align="center"><b>Bull</b> — All-in-One Embedded Engine Toolkit</p>
+<p align="center"><b>Bull</b> — All-in-One Embedded Engine Toolkit<br/>Data never enters LLM context — all processing stays local. Save your tokens and money.</p>
 
 <p align="center">
   <a href="README_zh.md">中文文档</a>

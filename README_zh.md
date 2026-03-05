@@ -6,7 +6,7 @@
   <img src="https://img.shields.io/badge/平台-linux%20%7C%20macOS%20%7C%20windows-lightgrey?style=flat-square" />
 </p>
 
-<p align="center"><b>Bull</b> — 全能嵌入式引擎工具箱</p>
+<p align="center"><b>Bull</b> — 全能嵌入式引擎工具箱<br/>数据不进 LLM 上下文，全部本地处理。Save your tokens and money.</p>
 
 <p align="center">
   <a href="README.md">English</a>
