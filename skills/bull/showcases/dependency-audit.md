@@ -1,99 +1,83 @@
-# Showcase: 微服务架构依赖审计
+# Showcase: Microservice Dependency Audit
 
-多引擎协作：Graph 建模服务拓扑并做图分析，SQL 存服务元数据做关联查询，KV 缓存审计结论。
-
----
-
-## 用户 Prompt
-
-> 我们有一组微服务，依赖关系在 services.csv 里（格式：from,to,weight）。
-> 另外 service_info.csv 记录了每个服务的 team、language、deploy_env。
-> 帮我做个架构审计：
-> 1. 有没有循环依赖
-> 2. 找出关键路径（auth-svc 到 db-svc 的最短路径）
-> 3. 哪些服务是孤立的（没有任何依赖关系）
-> 4. 按 team 统计各组负责了多少服务
-> 5. 给出部署顺序
+Multi-engine collaboration: Graph models the service topology and runs graph analysis, SQL stores service metadata for relational queries, KV caches audit conclusions.
 
 ---
 
-## Agent 执行过程
+## User Prompt
 
-### Step 1 — 导入依赖图（Graph）
+> We have a set of microservices with dependencies in services.csv (format: from,to,weight).
+> Another file service_info.csv records each service's team, language, and deploy_env.
+> Help me do an architecture audit:
+> 1. Are there any circular dependencies?
+> 2. Find the critical path (shortest path from auth-svc to db-svc)
+> 3. Which services are isolated (no dependencies at all)?
+> 4. Count how many services each team owns
+> 5. Generate a safe deployment order
+
+---
+
+## Agent Execution
+
+### Step 1 — Import Dependency Graph (Graph)
 
 ```bash
 bull graph import-csv infra services.csv
 ```
 
-查看概况：
+Check overview:
 
 ```bash
 bull graph stats infra
 ```
 
-### Step 2 — 导入服务元数据（SQL）
+### Step 2 — Import Service Metadata (SQL)
 
 ```bash
 bull sql import infra services service_info.csv
 ```
 
-### Step 3 — 循环依赖检测（Graph）
+### Step 3 — Cycle Detection (Graph)
 
 ```bash
 bull graph has-cycle infra
 ```
 
-如果输出 `true`，通过 SCC 定位循环所在的组件：
+If output is `true`, locate the cycle via connected components:
 
 ```bash
 bull graph components infra
 ```
 
-### Step 4 — 关键路径分析（Graph）
+### Step 4 — Critical Path Analysis (Graph)
 
 ```bash
 bull graph shortest-path infra auth-svc db-svc
 ```
 
-输出形如 `auth-svc -> user-svc -> db-svc`。
+Output looks like `auth-svc -> user-svc -> db-svc`.
 
-也可以确认两个服务之间是否可达：
+Check reachability between two services:
 
 ```bash
 bull graph has-path infra gateway db-svc
 ```
 
-### Step 5 — 孤立服务发现（Graph + SQL）
+### Step 5 — Isolated Service Discovery (Graph + SQL)
 
-先拿到图中所有节点：
+Get all vertices in the graph:
 
 ```bash
 bull graph vertices infra
 ```
 
-对每个节点查入度+出度，degree 为 0 的就是孤立服务：
+Check degree for each vertex — degree 0 means isolated:
 
 ```bash
 bull graph degree infra monitoring-svc
 ```
 
-或者用更高效的做法——从 SQL 侧对比：
-
-```bash
-bull sql query infra "
-  SELECT s.name, s.team
-  FROM services s
-  WHERE s.name NOT IN (
-    SELECT DISTINCT from_col FROM edges
-    UNION
-    SELECT DISTINCT to_col FROM edges
-  )
-" --format json
-```
-
-> 注意：这种方法需要先将边数据也导入 SQL，或者 agent 将 graph vertices 的结果与 SQL 做交叉比对。
-
-### Step 6 — 按 team 统计服务数（SQL）
+### Step 6 — Services Per Team (SQL)
 
 ```bash
 bull sql query infra "
@@ -104,15 +88,15 @@ bull sql query infra "
 " --format json
 ```
 
-### Step 7 — 生成部署顺序（Graph）
+### Step 7 — Deployment Order (Graph)
 
 ```bash
 bull graph toposort infra
 ```
 
-输出从无依赖到有依赖的顺序，即安全的部署顺序。
+Output is ordered from no-dependency to most-dependent — a safe deployment sequence.
 
-### Step 8 — 缓存审计结论（KV）
+### Step 8 — Cache Audit Results (KV)
 
 ```bash
 bull kv put audit:infra has_cycle 'true'
@@ -124,10 +108,10 @@ bull kv put audit:infra timestamp '2026-03-05T10:30:00Z'
 
 ---
 
-## 涉及引擎
+## Engines Used
 
-| 引擎 | 用途 |
-|------|------|
-| Graph | 依赖建模、循环检测、最短路径、拓扑排序、连通分量 |
-| SQL | 服务元数据查询、按 team 聚合 |
-| KV | 审计结论持久化 |
+| Engine | Purpose |
+|--------|---------|
+| Graph | Dependency modeling, cycle detection, shortest path, topological sort, connected components |
+| SQL | Service metadata queries, team aggregation |
+| KV | Audit result persistence |

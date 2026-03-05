@@ -1,23 +1,23 @@
-# Showcase: 电商多源数据分析流水线
+# Showcase: E-Commerce Multi-Source Data Analysis Pipeline
 
-多引擎协作：SQL 做数据清洗和聚合，Search 建商品搜索索引，KV 存中间状态。
-
----
-
-## 用户 Prompt
-
-> 我有三个文件：orders.csv（订单）、products.csv（商品）、customers.csv（客户）。
-> 帮我分析：
-> 1. 每个城市的总销售额和订单数
-> 2. 销售额 top 10 的商品
-> 3. 把商品信息建个搜索索引，方便后面按名称搜
-> 4. 记录一下分析进度，下次我可以接着来
+Multi-engine collaboration: SQL handles data import and aggregation, Search builds a product search index, KV tracks pipeline state.
 
 ---
 
-## Agent 执行过程
+## User Prompt
 
-### Step 1 — 导入数据（SQL）
+> I have three files: orders.csv (orders), products.csv (products), customers.csv (customers).
+> Help me analyze:
+> 1. Total sales and order count per city
+> 2. Top 10 products by revenue
+> 3. Build a search index for products so I can search by name later
+> 4. Track analysis progress so I can resume next time
+
+---
+
+## Agent Execution
+
+### Step 1 — Import Data (SQL)
 
 ```bash
 bull sql import shop orders orders.csv
@@ -25,7 +25,7 @@ bull sql import shop products products.csv
 bull sql import shop customers customers.csv
 ```
 
-确认导入情况：
+Verify imports:
 
 ```bash
 bull sql count shop orders
@@ -33,13 +33,13 @@ bull sql count shop products
 bull sql count shop customers
 ```
 
-### Step 2 — 记录流水线状态（KV）
+### Step 2 — Track Pipeline State (KV)
 
 ```bash
 bull kv put pipeline:shop step1_import '{"status":"done","tables":["orders","products","customers"]}'
 ```
 
-### Step 3 — 按城市汇总销售额（SQL JOIN + GROUP BY）
+### Step 3 — Sales by City (SQL JOIN + GROUP BY)
 
 ```bash
 bull sql query shop "
@@ -53,7 +53,7 @@ bull sql query shop "
 " --format json
 ```
 
-### Step 4 — Top 10 商品（SQL JOIN + ORDER BY）
+### Step 4 — Top 10 Products (SQL JOIN + ORDER BY)
 
 ```bash
 bull sql query shop "
@@ -69,30 +69,30 @@ bull sql query shop "
 " --format json
 ```
 
-### Step 5 — 导出商品数据并建搜索索引（SQL + Search）
+### Step 5 — Export Products and Build Search Index (SQL + Search)
 
-先导出为 NDJSON：
+Export as NDJSON:
 
 ```bash
 bull sql query shop "SELECT id AS _id, name, category, price FROM products" --format json > /tmp/products.ndjson
 ```
 
-> 注意：需要将 JSON 数组转为 NDJSON（每行一个对象），agent 可用脚本处理。
+> Note: The agent may need to convert the JSON array to NDJSON (one object per line) via a script.
 
-创建索引并批量导入：
+Create index and bulk import:
 
 ```bash
 bull search create products
 bull search bulk products /tmp/products.ndjson
 ```
 
-验证搜索功能：
+Verify search:
 
 ```bash
-bull search query products "category:电子" --field name --field price --format json
+bull search query products "electronics" --field name --field price --format json
 ```
 
-### Step 6 — 更新流水线状态（KV）
+### Step 6 — Update Pipeline State (KV)
 
 ```bash
 bull kv put pipeline:shop step2_analysis '{"status":"done","results":["city_sales","top10_products"]}'
@@ -100,7 +100,7 @@ bull kv put pipeline:shop step3_search '{"status":"done","index":"products","doc
 bull kv put pipeline:shop current_step '3'
 ```
 
-### Step 7 — 查看完整进度
+### Step 7 — View Full Progress
 
 ```bash
 bull kv list pipeline:shop --format json
@@ -108,10 +108,10 @@ bull kv list pipeline:shop --format json
 
 ---
 
-## 涉及引擎
+## Engines Used
 
-| 引擎 | 用途 |
-|------|------|
-| SQL | 数据导入、JOIN 查询、聚合分析 |
-| Search | 商品全文搜索索引 |
-| KV | 流水线状态持久化 |
+| Engine | Purpose |
+|--------|---------|
+| SQL | Data import, JOIN queries, aggregation analysis |
+| Search | Product full-text search index |
+| KV | Pipeline state persistence |
