@@ -23,7 +23,7 @@ if [ "${CROSS:-0}" = "1" ]; then
     [ "$os" = "windows" ] && ext=".exe"
     output="${OUT_DIR}/bull-${os}-${arch}${ext}"
     echo "  building ${os}/${arch} ..."
-    GOOS=$os GOARCH=$arch go build -trimpath -ldflags="${LDFLAGS}" -o "${output}" ./cmd/bull/
+    CGO_ENABLED=0 GOOS=$os GOARCH=$arch go build -trimpath -ldflags="${LDFLAGS}" -o "${output}" ./cmd/bull/
     echo "  -> ${output}"
   done
 fi

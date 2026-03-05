@@ -23,7 +23,11 @@ func dbPath(name string) string {
 }
 
 func OpenDB(name string) (*sql.DB, error) {
-	return sql.Open("sqlite", dbPath(name))
+	db, err := sql.Open("sqlite", dbPath(name))
+	if err != nil {
+		return nil, fmt.Errorf("sql: open %q: %w", name, err)
+	}
+	return db, nil
 }
 
 func Exec(dbName, sqlStr string) (int64, error) {

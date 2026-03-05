@@ -20,10 +20,14 @@ func dbPath(name string) string {
 }
 
 func openStorage(name string) (tstorage.Storage, error) {
-	return tstorage.NewStorage(
+	s, err := tstorage.NewStorage(
 		tstorage.WithDataPath(dbPath(name)),
 		tstorage.WithTimestampPrecision(tstorage.Seconds),
 	)
+	if err != nil {
+		return nil, fmt.Errorf("ts: open %q: %w", name, err)
+	}
+	return s, nil
 }
 
 func Write(dbName, metric string, value float64, timestamp int64, labels map[string]string) error {
@@ -143,12 +147,12 @@ func WriteBatchFromNDJSON(dbName, ndjsonFile string) (int, error) {
 
 func Latest(dbName, metric string, labels map[string]string) (*DataPoint, error) {
 	now := time.Now().Unix()
-	points, err := QueryRange(dbName, metric, now-86400*30, now, labels)
+	points, err := QueryRange(dbName, metric, now-86400*365, now, labels)
 	if err != nil {
 		return nil, err
 	}
 	if len(points) == 0 {
-		return nil, fmt.Errorf("no data points found for metric %q", metric)
+		return nil, fmt.Errorf("ts: no data points found for metric %q", metric)
 	}
 	return &points[len(points)-1], nil
 }

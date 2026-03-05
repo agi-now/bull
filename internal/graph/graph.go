@@ -42,11 +42,11 @@ func Load(name string, directed bool) (gr.Graph[string, string], error) {
 		if os.IsNotExist(err) {
 			return g, nil
 		}
-		return nil, err
+		return nil, fmt.Errorf("graph: load %q: %w", name, err)
 	}
 	var gd graphData
 	if err := json.Unmarshal(data, &gd); err != nil {
-		return nil, err
+		return nil, fmt.Errorf("graph: parse %q: %w", name, err)
 	}
 	for _, v := range gd.Vertices {
 		attrs := make([]func(*gr.VertexProperties), 0)
@@ -240,7 +240,7 @@ func Neighbors(name string, directed bool, id string) ([]string, error) {
 	}
 	edgesMap, ok := adjMap[id]
 	if !ok {
-		return nil, fmt.Errorf("vertex %q not found", id)
+		return nil, fmt.Errorf("graph: vertex %q not found", id)
 	}
 	var result []string
 	for target := range edgesMap {
@@ -260,7 +260,7 @@ func Degree(name string, directed bool, id string) (int, error) {
 	}
 	edgesMap, ok := adjMap[id]
 	if !ok {
-		return 0, fmt.Errorf("vertex %q not found", id)
+		return 0, fmt.Errorf("graph: vertex %q not found", id)
 	}
 	return len(edgesMap), nil
 }

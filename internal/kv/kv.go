@@ -16,7 +16,11 @@ func dbPath(name string) string {
 }
 
 func openDB(name string) (*bolt.DB, error) {
-	return bolt.Open(dbPath(name), 0600, nil)
+	db, err := bolt.Open(dbPath(name), 0600, nil)
+	if err != nil {
+		return nil, fmt.Errorf("kv: open %q: %w", name, err)
+	}
+	return db, nil
 }
 
 func Put(dbName, bucket, key, value string) error {
@@ -54,11 +58,11 @@ func Get(dbName, bucket, key string) (string, error) {
 	err = db.View(func(tx *bolt.Tx) error {
 		bkt := tx.Bucket(b)
 		if bkt == nil {
-			return fmt.Errorf("bucket %q not found", bucket)
+			return fmt.Errorf("kv: bucket %q not found", bucket)
 		}
 		v := bkt.Get([]byte(key))
 		if v == nil {
-			return fmt.Errorf("key %q not found", key)
+			return fmt.Errorf("kv: key %q not found", key)
 		}
 		val = make([]byte, len(v))
 		copy(val, v)

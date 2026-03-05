@@ -19,7 +19,11 @@ func dbPath(name string) string {
 }
 
 func openDB(name string) (*sql.DB, error) {
-	return sql.Open("sqlite", dbPath(name))
+	db, err := sql.Open("sqlite", dbPath(name))
+	if err != nil {
+		return nil, fmt.Errorf("search: open %q: %w", name, err)
+	}
+	return db, nil
 }
 
 func Create(name string) error {
@@ -194,7 +198,7 @@ func GetDoc(name, docID string) (map[string]interface{}, error) {
 	var rawData string
 	err = db.QueryRow(`SELECT data FROM docs_raw WHERE doc_id = ?`, docID).Scan(&rawData)
 	if err == sql.ErrNoRows {
-		return nil, fmt.Errorf("document %q not found", docID)
+		return nil, fmt.Errorf("search: document %q not found", docID)
 	}
 	if err != nil {
 		return nil, err
