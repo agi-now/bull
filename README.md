@@ -18,8 +18,20 @@ Five data engines. One static binary. Zero external dependencies.
 
 **Bull** packs a KV store, SQL database, graph engine, full-text search, and time-series storage into a single ~8 MB Go executable. It is purpose-built for **AI Agent skill extensions** — drop the binary into any sandboxed environment and instantly unlock local data processing capabilities that would normally require installing multiple database servers.
 
+## The Problem
+
+When AI Agents process large datasets — CSV files, logs, documents — the conventional approach is to load data into conversation context. This leads to **massive token consumption** and **slow response times**. A 10 MB CSV file easily burns through hundreds of thousands of tokens just to read, let alone analyze.
+
+Bull solves this by **offloading data processing to local engines**. Instead of feeding raw data into the LLM, the Agent imports it into Bull, runs queries and aggregations locally, and only returns compact results to the conversation. The data never enters the token stream.
+
+```
+Without Bull:  User → [10MB CSV as tokens] → LLM → answer     (hundreds of thousands of tokens)
+With Bull:     User → Agent → bull sql import + query → LLM → answer   (a few hundred tokens)
+```
+
 ## Why Bull?
 
+- **Slash token costs** — data stays local, only query results enter the conversation. Process millions of rows without burning tokens on raw data.
 - **Single binary, zero dependencies** — no database servers to install, no runtime to configure. Copy one file and you're done.
 - **5 engines, 72+ commands** — KV, SQL, Graph, Full-text Search, Time-Series — covers the vast majority of data processing scenarios an AI Agent would encounter.
 - **CLI first** — every engine is accessible via straightforward command-line interface, making it easy to integrate with any language or framework.
