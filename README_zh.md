@@ -48,6 +48,20 @@ bull search query idx "error timeout"     # 全文搜索
 bull ts latest mon cpu --format json      # 时序指标
 ```
 
+## 下载
+
+从 [**GitHub Releases**](https://github.com/agi-now/bull/releases/latest) 获取对应平台的最新二进制：
+
+| 平台 | 文件名 |
+|------|--------|
+| Linux amd64 | `bull-linux-amd64` |
+| Linux arm64 | `bull-linux-arm64` |
+| macOS amd64 | `bull-darwin-amd64` |
+| macOS arm64 | `bull-darwin-arm64` |
+| Windows amd64 | `bull-windows-amd64.exe` |
+
+下载后重命名为 `bull`（Windows 为 `bull.exe`），放入 PATH 即可。
+
 ## 引擎一览
 
 | 引擎 | 底层库 | 能力 |
@@ -57,10 +71,6 @@ bull ts latest mon cpu --format json      # 时序指标
 | **Graph** | [dominikbraun/graph](https://github.com/dominikbraun/graph) | 有向/无向加权图——最短路径、DFS/BFS、拓扑排序、环检测、连通分量 |
 | **Search** | SQLite FTS5 | 全文索引——评分查询、字段返回、分页、NDJSON 批量索引 |
 | **TS** | [tstorage](https://github.com/nakabonne/tstorage) | 时序存储——带标签的指标、范围查询、最新值查询、CSV 导出 |
-
-## 安装
-
-从 [GitHub Releases](https://github.com/agi-now/bull/releases/latest) 下载对应平台的预编译二进制，重命名为 `bull`（Windows 为 `bull.exe`），放入 PATH 即可。
 
 ## 从源码编译
 
@@ -128,6 +138,8 @@ bull ─┬─ kv ─────┬─ put / get / del          单键操作
 ## AI Agent 技能集成
 
 `skills/` 目录包含机器可读的技能定义文件。AI Agent 读取这些文件来决定**用哪个引擎**、**调用哪些命令**。使用 `--format json` 获取结构化输出以便机器解析。
+
+技能文件会在 AI Agent 安装 Bull 时自动下载。如果自动下载失败，可手动将本仓库的 `skills/` 目录拷贝到你的项目中。
 
 ## 数据持久化
 

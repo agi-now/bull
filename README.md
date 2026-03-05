@@ -48,6 +48,20 @@ bull search query idx "error timeout"     # full-text search
 bull ts latest mon cpu --format json      # time-series metrics
 ```
 
+## Download
+
+Get the latest binary for your platform from [**GitHub Releases**](https://github.com/agi-now/bull/releases/latest).
+
+| Platform | Binary |
+|----------|--------|
+| Linux amd64 | `bull-linux-amd64` |
+| Linux arm64 | `bull-linux-arm64` |
+| macOS amd64 | `bull-darwin-amd64` |
+| macOS arm64 | `bull-darwin-arm64` |
+| Windows amd64 | `bull-windows-amd64.exe` |
+
+Download, rename to `bull` (or `bull.exe`), and place it in your PATH.
+
 ## Engines
 
 | Engine | Powered By | What It Does |
@@ -57,10 +71,6 @@ bull ts latest mon cpu --format json      # time-series metrics
 | **Graph** | [dominikbraun/graph](https://github.com/dominikbraun/graph) | Directed & undirected weighted graphs — shortest path, DFS/BFS, topological sort, cycle detection, connected components |
 | **Search** | SQLite FTS5 | Full-text indexing — scored queries, field return, pagination, bulk NDJSON indexing |
 | **TS** | [tstorage](https://github.com/nakabonne/tstorage) | Time-series storage — labeled metrics, range queries, latest-point lookup, CSV export |
-
-## Install
-
-Download the pre-built binary for your platform from [GitHub Releases](https://github.com/agi-now/bull/releases/latest), rename to `bull` (or `bull.exe`), and place it in your PATH.
 
 ## Build from Source
 
@@ -128,6 +138,8 @@ For detailed usage of each command, see [`skills/bull/references/`](skills/bull/
 ## AI Agent Skills
 
 The `skills/` directory contains machine-readable skill definitions for each engine. An AI agent reads these files to decide **which engine to use** and **which commands to invoke** for any given task. Use `--format json` for structured output.
+
+Skill files are automatically downloaded by the AI Agent when it installs Bull. If automatic download fails, manually copy the `skills/` directory from this repository into your project.
 
 ## Data Storage
 
