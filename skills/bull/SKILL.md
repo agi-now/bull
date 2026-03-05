@@ -1,16 +1,50 @@
 ---
 name: bull
-description: "All-in-one embedded engine toolkit (~18MB Go binary) providing local KV store, SQL database, graph analysis, full-text search, and time-series storage. TRIGGER when: user needs local data storage, CSV/JSON analysis, graph traversal, full-text search, metrics recording, or persistent state between agent steps. Supports both CLI and HTTP API. Zero external dependencies."
+description: "Micro data environment in a single ~18MB binary — KV store, SQL database, graph analysis, full-text search, and time-series storage, all out of the box. No servers to install, no dependencies to manage. TRIGGER when: user needs local data storage, CSV/JSON analysis, graph traversal, full-text search, metrics recording, persistent state between agent steps, or building data pipelines. Supports CLI for scripting and HTTP API for streaming applications."
 license: Apache-2.0
 compatibility: "Requires the bull binary in PATH. Supports linux/amd64, linux/arm64, darwin/amd64, darwin/arm64, windows/amd64."
+repository: https://github.com/agi-now/bull
+install:
+  binary_pattern: "bull-{os}-{arch}"
+  platforms:
+    - linux/amd64
+    - linux/arm64
+    - darwin/amd64
+    - darwin/arm64
+    - windows/amd64
+  steps:
+    - "Download from GitHub Releases: https://github.com/agi-now/bull/releases/latest"
+    - "Move to PATH and chmod +x"
+  quick: "curl -fsSL https://github.com/agi-now/bull/releases/latest/download/bull-$(uname -s | tr A-Z a-z)-$(uname -m | sed 's/x86_64/amd64/;s/aarch64/arm64/') -o /usr/local/bin/bull && chmod +x /usr/local/bin/bull"
 metadata:
-  author: bull-cli
+  author: agi-now
   version: "1.0"
 ---
 
-# Bull — All-in-One Embedded Engine Toolkit
+# Bull — Micro Data Environment, One Binary
 
-Bull packages five embedded engines into a single static binary. No servers to install, no network dependencies. Just download and run.
+Bull is a self-contained data environment in a single static binary. Five embedded engines — KV, SQL, Graph, Search, Time-Series — ready to use the moment you download it. No databases to install, no servers to configure, no dependencies to chase. Just `bull` and your data.
+
+Use CLI to build data pipelines step by step. Use HTTP API to power streaming applications. Combine both for agent workflows that persist state, analyze, and query — all locally.
+
+## Installation
+
+**One-liner (Linux / macOS):**
+```bash
+curl -fsSL https://github.com/agi-now/bull/releases/latest/download/bull-$(uname -s | tr A-Z a-z)-$(uname -m | sed 's/x86_64/amd64/;s/aarch64/arm64/') -o /usr/local/bin/bull && chmod +x /usr/local/bin/bull
+```
+
+**Windows (PowerShell):**
+```powershell
+Invoke-WebRequest -Uri "https://github.com/agi-now/bull/releases/latest/download/bull-windows-amd64.exe" -OutFile "$env:LOCALAPPDATA\bull.exe"
+```
+
+**Manual:** Download the binary for your platform from [GitHub Releases](https://github.com/agi-now/bull/releases/latest), rename to `bull` (or `bull.exe`), and place it in your PATH.
+
+**Verify:**
+```bash
+bull version
+```
 
 ## Engines
 
@@ -21,6 +55,17 @@ Bull packages five embedded engines into a single static binary. No servers to i
 | **graph** | dominikbraun/graph | Directed/undirected graphs — shortest path, DFS/BFS, cycle detection, toposort |
 | **search** | bleve | Full-text search — index JSON documents, query with scoring and field return |
 | **ts** | tstorage | Time-series — write metrics with labels, range query, export CSV |
+
+## Agent Strategy: Offload to Bull, Save Tokens
+
+When working with data, follow this principle: **understand the data first, preprocess with Python, then hand off to bull for storage and analysis.**
+
+1. **Inspect** — Read a small sample of the data source (head, schema, dtypes) to understand structure. Do NOT load entire datasets into conversation context.
+2. **Preprocess with Python** — Use Python scripts for cleaning, type conversion, column renaming, filtering, reshaping, or format conversion (e.g. Excel/Parquet → CSV/NDJSON). Write the result to a file.
+3. **Import into bull** — Use `bull sql import`, `bull search bulk`, `bull graph import-csv`, or `bull ts bulk` to load the preprocessed file.
+4. **Analyze with bull** — Run queries, aggregations, searches, and graph algorithms via bull CLI. Return `--format json` results directly — no need to parse large outputs in Python.
+
+This keeps token usage minimal: Python handles the heavy byte-level work offline, bull handles persistent storage and query execution, and only compact JSON results enter the conversation.
 
 ## Quick Decision: Which Engine to Use
 
