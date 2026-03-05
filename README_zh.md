@@ -1,12 +1,12 @@
 <p align="center">
-  <img src="https://img.shields.io/badge/体积-~18MB-blue?style=flat-square" />
+  <img src="https://img.shields.io/badge/体积-~20MB-blue?style=flat-square" />
   <img src="https://img.shields.io/badge/引擎-5个-green?style=flat-square" />
-  <img src="https://img.shields.io/badge/命令-72条-orange?style=flat-square" />
+  <img src="https://img.shields.io/badge/命令-72+-orange?style=flat-square" />
   <img src="https://img.shields.io/badge/CGo-无依赖-brightgreen?style=flat-square" />
   <img src="https://img.shields.io/badge/平台-linux%20%7C%20macOS%20%7C%20windows-lightgrey?style=flat-square" />
 </p>
 
-<p align="center"><b>🐂 Bull</b> — 全能嵌入式引擎工具箱</p>
+<p align="center"><b>Bull</b> — 全能嵌入式引擎工具箱</p>
 
 <p align="center">
   <a href="README.md">English</a>
@@ -16,7 +16,15 @@
 
 五个数据引擎，一个静态二进制，零外部依赖。
 
-**Bull** 将 KV 存储、SQL 数据库、图引擎、全文搜索和时序存储打包进一个约 18 MB 的 Go 可执行文件。它专为 **AI Agent 技能扩展** 设计——将二进制丢入任何受限环境，即刻获得本地数据处理能力，无需安装任何数据库服务。
+**Bull** 将 KV 存储、SQL 数据库、图引擎、全文搜索和时序存储打包进一个约 20 MB 的 Go 可执行文件。它专为 **AI Agent 技能扩展** 设计——将二进制丢入任何受限环境，即刻获得本地数据处理能力，无需安装任何数据库服务。
+
+## 为什么选择 Bull?
+
+- **单文件部署，零依赖** — 不需要安装数据库服务，不需要配置运行时环境。复制一个文件即可运行。
+- **5 引擎，72+ 命令** — KV、SQL、图、全文搜索、时序 — 覆盖 AI Agent 绝大多数数据处理场景。
+- **CLI + HTTP API** — 每个引擎都同时提供命令行和 RESTful HTTP 接口（`bull serve`），方便任何语言和框架集成。
+- **AI Agent 原生支持** — 内置 `skills/` 机器可读技能定义，AI Agent 可自主决策使用哪个引擎、调用哪个命令。
+- **纯 Go，静态编译** — 无 CGo、无 Wasm、无动态库。一条命令交叉编译到 Linux / macOS / Windows。
 
 ## 速览
 
@@ -26,6 +34,7 @@ bull sql query db "SELECT * FROM t"       # 完整 SQL（SQLite）
 bull graph shortest-path g A B            # 图算法
 bull search query idx "error timeout"     # 全文搜索
 bull ts latest mon cpu --format json      # 时序指标
+bull serve -p 2880                        # 启动 HTTP API 服务
 ```
 
 ## 引擎一览
@@ -169,6 +178,18 @@ bull ts count mon cpu
 bull ts export mon cpu -o metrics.csv
 ```
 
+### HTTP API
+
+所有引擎同样支持 HTTP 访问。启动服务后，通过 RESTful 接口操作任意引擎：
+
+```bash
+bull serve -p 2880                            # 在 2880 端口启动
+
+curl localhost:2880/api/version
+curl -X POST localhost:2880/api/kv/mydb/get -d '{"key":"mykey"}'
+curl -X POST localhost:2880/api/sql/mydb/query -d '{"sql":"SELECT 1"}'
+```
+
 ### 全局命令
 
 ```bash
@@ -225,27 +246,16 @@ bull ─┬─ kv ─────┬─ put / get / del          单键操作
       │          ├─ drop                     清理
       │          └─ dbs                      列出数据库
       │
+      ├─ serve                               HTTP API 服务 (--port)
       ├─ version                             构建信息
       └─ info                                数据目录总览
 ```
 
-**72 条命令**，横跨 5 个引擎 + 2 个全局命令。
+**72+ 条命令**，横跨 5 个引擎 + HTTP API 服务 + 2 个全局命令。
 
 ## AI Agent 技能集成
 
-`skills/` 目录包含机器可读的 YAML 技能定义文件：
-
-| 文件 | 内容 |
-|------|------|
-| `README.yaml` | 技能索引、决策矩阵（21 个场景）、输出约定 |
-| `kv.yaml` | 17 条命令——触发条件、用法、输出格式 |
-| `sql.yaml` | 15 条命令——触发条件、用法、输出格式 |
-| `graph.yaml` | 21 条命令——触发条件、用法、输出格式 |
-| `search.yaml` | 11 条命令——触发条件、用法、输出格式 |
-| `ts.yaml` | 8 条命令——触发条件、用法、输出格式 |
-| `examples.yaml` | 45 个真实场景 prompt，映射到具体命令序列 |
-
-AI Agent 读取这些 YAML 来决定**用哪个引擎**、**调用哪些命令**。使用 `--format json` 获取结构化输出以便机器解析。
+`skills/` 目录包含机器可读的技能定义文件。AI Agent 读取这些文件来决定**用哪个引擎**、**调用哪些命令**。使用 `--format json` 获取结构化输出以便机器解析。
 
 ## 项目结构
 
@@ -253,19 +263,22 @@ AI Agent 读取这些 YAML 来决定**用哪个引擎**、**调用哪些命令**
 bull/
 ├── cmd/bull/              CLI 入口（cobra）
 │   ├── main.go            根命令、version、info
-│   ├── cmd_kv.go          17 条 KV 子命令
-│   ├── cmd_sql.go         15 条 SQL 子命令
-│   ├── cmd_graph.go       21 条 Graph 子命令
-│   ├── cmd_search.go      11 条 Search 子命令
-│   └── cmd_ts.go          8 条 TS 子命令
+│   ├── cmd_kv.go          KV 子命令
+│   ├── cmd_sql.go         SQL 子命令
+│   ├── cmd_graph.go       Graph 子命令
+│   ├── cmd_search.go      Search 子命令
+│   ├── cmd_ts.go          TS 子命令
+│   └── cmd_serve.go       HTTP API 服务
 ├── internal/
 │   ├── config/            数据目录配置
 │   ├── kv/                bbolt 封装
 │   ├── sql/               SQLite 封装
 │   ├── graph/             图算法封装
 │   ├── search/            bleve 封装
-│   └── ts/                tstorage 封装
-├── skills/                YAML 技能定义文件
+│   ├── ts/                tstorage 封装
+│   └── server/            HTTP API 处理器
+├── skills/                AI Agent 技能定义
+├── web/                   Web 前端（Vite + React）
 ├── build.sh / build.ps1   带版本注入的构建脚本
 └── data/                  运行时存储（已 gitignore）
 ```

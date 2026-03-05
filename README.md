@@ -1,12 +1,12 @@
 <p align="center">
-  <img src="https://img.shields.io/badge/binary-~18MB-blue?style=flat-square" />
+  <img src="https://img.shields.io/badge/binary-~20MB-blue?style=flat-square" />
   <img src="https://img.shields.io/badge/engines-5-green?style=flat-square" />
-  <img src="https://img.shields.io/badge/commands-72-orange?style=flat-square" />
+  <img src="https://img.shields.io/badge/commands-72+-orange?style=flat-square" />
   <img src="https://img.shields.io/badge/CGo-none-brightgreen?style=flat-square" />
   <img src="https://img.shields.io/badge/platforms-linux%20%7C%20macOS%20%7C%20windows-lightgrey?style=flat-square" />
 </p>
 
-<p align="center"><b>🐂 Bull</b> — All-in-One Embedded Engine Toolkit</p>
+<p align="center"><b>Bull</b> — All-in-One Embedded Engine Toolkit</p>
 
 <p align="center">
   <a href="README_zh.md">中文文档</a>
@@ -16,7 +16,15 @@
 
 Five data engines. One static binary. Zero external dependencies.
 
-**Bull** packs a KV store, SQL database, graph engine, full-text search, and time-series storage into a single ~18 MB Go executable. It is purpose-built for **AI Agent skill extensions** — drop the binary into any sandboxed environment and instantly unlock local data processing capabilities that would normally require installing multiple database servers.
+**Bull** packs a KV store, SQL database, graph engine, full-text search, and time-series storage into a single ~20 MB Go executable. It is purpose-built for **AI Agent skill extensions** — drop the binary into any sandboxed environment and instantly unlock local data processing capabilities that would normally require installing multiple database servers.
+
+## Why Bull?
+
+- **Single binary, zero dependencies** — no database servers to install, no runtime to configure. Copy one file and you're done.
+- **5 engines, 72+ commands** — KV, SQL, Graph, Full-text Search, Time-Series — covers the vast majority of data processing scenarios an AI Agent would encounter.
+- **CLI + HTTP API** — every engine is accessible via both command-line and RESTful HTTP interface (`bull serve`), making it easy to integrate with any language or framework.
+- **AI-Agent native** — ships with machine-readable skill definitions in `skills/`, enabling AI Agents to autonomously decide which engine and command to use.
+- **Pure Go, statically compiled** — no CGo, no Wasm, no shared libraries. Cross-compile for Linux / macOS / Windows with a single command.
 
 ## At a Glance
 
@@ -26,6 +34,7 @@ bull sql query db "SELECT * FROM t"       # full SQL (SQLite)
 bull graph shortest-path g A B            # graph algorithms
 bull search query idx "error timeout"     # full-text search
 bull ts latest mon cpu --format json      # time-series metrics
+bull serve -p 2880                        # start HTTP API server
 ```
 
 ## Engines
@@ -169,6 +178,18 @@ bull ts count mon cpu
 bull ts export mon cpu -o metrics.csv
 ```
 
+### HTTP API
+
+All engines are also available over HTTP. Start the server and access any engine via RESTful endpoints:
+
+```bash
+bull serve -p 2880                            # start on port 2880
+
+curl localhost:2880/api/version
+curl -X POST localhost:2880/api/kv/mydb/get -d '{"key":"mykey"}'
+curl -X POST localhost:2880/api/sql/mydb/query -d '{"sql":"SELECT 1"}'
+```
+
 ### Global
 
 ```bash
@@ -225,47 +246,39 @@ bull ─┬─ kv ─────┬─ put / get / del          single key ops
       │          ├─ drop                     cleanup
       │          └─ dbs                      list databases
       │
+      ├─ serve                               HTTP API server (--port)
       ├─ version                             build info
       └─ info                                data directory overview
 ```
 
-**72 commands** across 5 engines + 2 global.
+**72+ commands** across 5 engines, HTTP API server, and 2 global utilities.
 
 ## AI Agent Skills
 
-The `skills/` directory contains machine-readable YAML definitions for each engine:
-
-| File | Contents |
-|------|----------|
-| `README.yaml` | Skill index, decision matrix (21 scenarios), output conventions |
-| `kv.yaml` | 17 commands — triggers, usage, output format |
-| `sql.yaml` | 15 commands — triggers, usage, output format |
-| `graph.yaml` | 21 commands — triggers, usage, output format |
-| `search.yaml` | 11 commands — triggers, usage, output format |
-| `ts.yaml` | 8 commands — triggers, usage, output format |
-| `examples.yaml` | 45 real-world prompts mapped to concrete command sequences |
-
-An AI agent reads these YAMLs to decide **which engine to use** and **which commands to invoke** for any given task. Use `--format json` for structured output.
+The `skills/` directory contains machine-readable skill definitions for each engine. An AI agent reads these files to decide **which engine to use** and **which commands to invoke** for any given task. Use `--format json` for structured output.
 
 ## Project Layout
 
 ```
 bull/
-├── cmd/bull/              CLI (cobra)
+├── cmd/bull/              CLI entry (cobra)
 │   ├── main.go            root, version, info
-│   ├── cmd_kv.go          17 KV subcommands
-│   ├── cmd_sql.go         15 SQL subcommands
-│   ├── cmd_graph.go       21 Graph subcommands
-│   ├── cmd_search.go      11 Search subcommands
-│   └── cmd_ts.go          8 TS subcommands
+│   ├── cmd_kv.go          KV subcommands
+│   ├── cmd_sql.go         SQL subcommands
+│   ├── cmd_graph.go       Graph subcommands
+│   ├── cmd_search.go      Search subcommands
+│   ├── cmd_ts.go          TS subcommands
+│   └── cmd_serve.go       HTTP API server
 ├── internal/
 │   ├── config/            data directory config
 │   ├── kv/                bbolt wrapper
 │   ├── sql/               SQLite wrapper
 │   ├── graph/             graph algorithms
 │   ├── search/            bleve wrapper
-│   └── ts/                tstorage wrapper
-├── skills/                YAML skill definitions
+│   ├── ts/                tstorage wrapper
+│   └── server/            HTTP API handlers
+├── skills/                AI Agent skill definitions
+├── web/                   Web frontend (Vite + React)
 ├── build.sh / build.ps1   build with version injection
 └── data/                  runtime storage (gitignored)
 ```
