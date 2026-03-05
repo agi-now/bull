@@ -147,7 +147,7 @@ func WriteBatchFromNDJSON(dbName, ndjsonFile string) (int, error) {
 
 func Latest(dbName, metric string, labels map[string]string) (*DataPoint, error) {
 	now := time.Now().Unix()
-	points, err := QueryRange(dbName, metric, now-86400*365, now, labels)
+	points, err := QueryRange(dbName, metric, 0, now, labels)
 	if err != nil {
 		return nil, err
 	}
