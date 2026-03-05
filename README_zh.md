@@ -48,6 +48,38 @@ bull search query idx "error timeout"     # 全文搜索
 bull ts latest mon cpu --format json      # 时序指标
 ```
 
+## 示例：60 秒完成故障排查
+
+AI Agent 收到服务器日志和服务依赖图，在本地完成导入、分析、搜索、追踪——原始数据零 token 消耗。
+
+```bash
+# 1. 导入 5 万条访问日志到 SQL
+bull sql import-ndjson incident access access.ndjson        # imported 50000 rows
+
+# 2. 找到报错最多的服务
+bull sql query incident "SELECT service, COUNT(*) c FROM access WHERE level='ERROR' GROUP BY service ORDER BY c DESC LIMIT 5" --format json
+
+# 3. 建搜索索引，定位根因
+bull search create logs
+bull search bulk logs access.ndjson
+bull search query logs "connection refused port 5432" --field service --field message --limit 5 --format json
+
+# 4. 导入服务依赖图，追踪爆炸半径
+bull graph import-csv incident deps.csv
+bull graph shortest-path incident api-gateway db-primary
+bull graph bfs incident db-primary                          # 所有受影响的下游服务
+
+# 5. 记录事件时间线
+bull ts write incident_metrics error_rate 127 --label service=db-primary
+bull ts write incident_metrics error_rate 3 --label service=db-primary  # 修复后
+
+# 6. 保存结论供复盘
+bull kv put incident:2026-03-05 root_cause '{"service":"db-primary","issue":"connection pool exhausted"}'
+bull kv put incident:2026-03-05 blast_radius '["api-gateway","user-svc","payment-svc"]'
+```
+
+5 个引擎，12 条命令，一个二进制——Agent 处理了 5 万条日志，没有一行数据进入 LLM 上下文。
+
 ## 下载
 
 从 [**GitHub Releases**](https://github.com/agi-now/bull/releases/latest) 获取对应平台的最新二进制：

@@ -48,6 +48,38 @@ bull search query idx "error timeout"     # full-text search
 bull ts latest mon cpu --format json      # time-series metrics
 ```
 
+## Example: Incident Investigation in 60 Seconds
+
+An AI Agent receives server logs and a service dependency map. It imports, analyzes, searches, and tracks — all locally, zero tokens wasted on raw data.
+
+```bash
+# 1. Import 50k access logs into SQL
+bull sql import-ndjson incident access access.ndjson        # imported 50000 rows
+
+# 2. Find the top error-producing services
+bull sql query incident "SELECT service, COUNT(*) c FROM access WHERE level='ERROR' GROUP BY service ORDER BY c DESC LIMIT 5" --format json
+
+# 3. Build a search index and find the root cause
+bull search create logs
+bull search bulk logs access.ndjson
+bull search query logs "connection refused port 5432" --field service --field message --limit 5 --format json
+
+# 4. Import service dependency graph and trace the blast radius
+bull graph import-csv incident deps.csv
+bull graph shortest-path incident api-gateway db-primary
+bull graph bfs incident db-primary                          # all affected downstream services
+
+# 5. Record the incident timeline
+bull ts write incident_metrics error_rate 127 --label service=db-primary
+bull ts write incident_metrics error_rate 3 --label service=db-primary  # after fix
+
+# 6. Save conclusions for the post-mortem
+bull kv put incident:2026-03-05 root_cause '{"service":"db-primary","issue":"connection pool exhausted"}'
+bull kv put incident:2026-03-05 blast_radius '["api-gateway","user-svc","payment-svc"]'
+```
+
+5 engines, 12 commands, one binary — the Agent processed 50k logs without a single row entering the LLM context.
+
 ## Download
 
 Get the latest binary for your platform from [**GitHub Releases**](https://github.com/agi-now/bull/releases/latest).
