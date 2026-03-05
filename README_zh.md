@@ -60,14 +60,14 @@ bull ts latest mon cpu --format json      # 时序指标
 
 ## 安装
 
+从 [GitHub Releases](https://github.com/agi-now/bull/releases/latest) 下载对应平台的预编译二进制，重命名为 `bull`（Windows 为 `bull.exe`），放入 PATH 即可。
+
+## 从源码编译
+
 ```bash
-# 克隆并构建
 git clone https://github.com/agi-now/bull.git && cd bull
 ./build.sh                # Linux / macOS
 .\build.ps1               # Windows
-
-# 或从 GitHub Releases 下载预编译二进制
-# https://github.com/agi-now/bull/releases/latest
 ```
 
 ## 命令总览

@@ -60,14 +60,14 @@ bull ts latest mon cpu --format json      # time-series metrics
 
 ## Install
 
+Download the pre-built binary for your platform from [GitHub Releases](https://github.com/agi-now/bull/releases/latest), rename to `bull` (or `bull.exe`), and place it in your PATH.
+
+## Build from Source
+
 ```bash
-# Clone and build
 git clone https://github.com/agi-now/bull.git && cd bull
 ./build.sh                # Linux / macOS
 .\build.ps1               # Windows
-
-# Or download pre-built binary from GitHub Releases
-# https://github.com/agi-now/bull/releases/latest
 ```
 
 ## Command Reference
