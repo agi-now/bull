@@ -22,7 +22,7 @@
 
 - **单文件部署，零依赖** — 不需要安装数据库服务，不需要配置运行时环境。复制一个文件即可运行。
 - **5 引擎，72+ 命令** — KV、SQL、图、全文搜索、时序 — 覆盖 AI Agent 绝大多数数据处理场景。
-- **CLI + HTTP API** — 每个引擎都同时提供命令行和 RESTful HTTP 接口（`bull serve`），方便任何语言和框架集成。
+- **CLI 优先** — 每个引擎都通过简洁的命令行接口操作，方便任何语言和框架集成。
 - **AI Agent 原生支持** — 内置 `skills/` 机器可读技能定义，AI Agent 可自主决策使用哪个引擎、调用哪个命令。
 - **纯 Go，静态编译** — 无 CGo、无 Wasm、无动态库。一条命令交叉编译到 Linux / macOS / Windows。
 
@@ -34,7 +34,6 @@ bull sql query db "SELECT * FROM t"       # 完整 SQL（SQLite）
 bull graph shortest-path g A B            # 图算法
 bull search query idx "error timeout"     # 全文搜索
 bull ts latest mon cpu --format json      # 时序指标
-bull serve -p 2880                        # 启动 HTTP API 服务
 ```
 
 ## 引擎一览
@@ -178,18 +177,6 @@ bull ts count mon cpu
 bull ts export mon cpu -o metrics.csv
 ```
 
-### HTTP API
-
-所有引擎同样支持 HTTP 访问。启动服务后，通过 RESTful 接口操作任意引擎：
-
-```bash
-bull serve -p 2880                            # 在 2880 端口启动
-
-curl localhost:2880/api/version
-curl -X POST localhost:2880/api/kv/mydb/get -d '{"key":"mykey"}'
-curl -X POST localhost:2880/api/sql/mydb/query -d '{"sql":"SELECT 1"}'
-```
-
 ### 全局命令
 
 ```bash
@@ -246,12 +233,11 @@ bull ─┬─ kv ─────┬─ put / get / del          单键操作
       │          ├─ drop                     清理
       │          └─ dbs                      列出数据库
       │
-      ├─ serve                               HTTP API 服务 (--port)
       ├─ version                             构建信息
       └─ info                                数据目录总览
 ```
 
-**72+ 条命令**，横跨 5 个引擎 + HTTP API 服务 + 2 个全局命令。
+**72+ 条命令**，横跨 5 个引擎 + 2 个全局命令。
 
 ## AI Agent 技能集成
 
@@ -267,18 +253,15 @@ bull/
 │   ├── cmd_sql.go         SQL 子命令
 │   ├── cmd_graph.go       Graph 子命令
 │   ├── cmd_search.go      Search 子命令
-│   ├── cmd_ts.go          TS 子命令
-│   └── cmd_serve.go       HTTP API 服务
+│   └── cmd_ts.go          TS 子命令
 ├── internal/
 │   ├── config/            数据目录配置
 │   ├── kv/                bbolt 封装
 │   ├── sql/               SQLite 封装
 │   ├── graph/             图算法封装
 │   ├── search/            bleve 封装
-│   ├── ts/                tstorage 封装
-│   └── server/            HTTP API 处理器
+│   └── ts/                tstorage 封装
 ├── skills/                AI Agent 技能定义
-├── web/                   Web 前端（Vite + React）
 ├── build.sh / build.ps1   带版本注入的构建脚本
 └── data/                  运行时存储（已 gitignore）
 ```

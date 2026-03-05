@@ -22,7 +22,7 @@ Five data engines. One static binary. Zero external dependencies.
 
 - **Single binary, zero dependencies** — no database servers to install, no runtime to configure. Copy one file and you're done.
 - **5 engines, 72+ commands** — KV, SQL, Graph, Full-text Search, Time-Series — covers the vast majority of data processing scenarios an AI Agent would encounter.
-- **CLI + HTTP API** — every engine is accessible via both command-line and RESTful HTTP interface (`bull serve`), making it easy to integrate with any language or framework.
+- **CLI first** — every engine is accessible via straightforward command-line interface, making it easy to integrate with any language or framework.
 - **AI-Agent native** — ships with machine-readable skill definitions in `skills/`, enabling AI Agents to autonomously decide which engine and command to use.
 - **Pure Go, statically compiled** — no CGo, no Wasm, no shared libraries. Cross-compile for Linux / macOS / Windows with a single command.
 
@@ -34,7 +34,6 @@ bull sql query db "SELECT * FROM t"       # full SQL (SQLite)
 bull graph shortest-path g A B            # graph algorithms
 bull search query idx "error timeout"     # full-text search
 bull ts latest mon cpu --format json      # time-series metrics
-bull serve -p 2880                        # start HTTP API server
 ```
 
 ## Engines
@@ -178,18 +177,6 @@ bull ts count mon cpu
 bull ts export mon cpu -o metrics.csv
 ```
 
-### HTTP API
-
-All engines are also available over HTTP. Start the server and access any engine via RESTful endpoints:
-
-```bash
-bull serve -p 2880                            # start on port 2880
-
-curl localhost:2880/api/version
-curl -X POST localhost:2880/api/kv/mydb/get -d '{"key":"mykey"}'
-curl -X POST localhost:2880/api/sql/mydb/query -d '{"sql":"SELECT 1"}'
-```
-
 ### Global
 
 ```bash
@@ -246,12 +233,11 @@ bull ─┬─ kv ─────┬─ put / get / del          single key ops
       │          ├─ drop                     cleanup
       │          └─ dbs                      list databases
       │
-      ├─ serve                               HTTP API server (--port)
       ├─ version                             build info
       └─ info                                data directory overview
 ```
 
-**72+ commands** across 5 engines, HTTP API server, and 2 global utilities.
+**72+ commands** across 5 engines + 2 global utilities.
 
 ## AI Agent Skills
 
@@ -267,18 +253,15 @@ bull/
 │   ├── cmd_sql.go         SQL subcommands
 │   ├── cmd_graph.go       Graph subcommands
 │   ├── cmd_search.go      Search subcommands
-│   ├── cmd_ts.go          TS subcommands
-│   └── cmd_serve.go       HTTP API server
+│   └── cmd_ts.go          TS subcommands
 ├── internal/
 │   ├── config/            data directory config
 │   ├── kv/                bbolt wrapper
 │   ├── sql/               SQLite wrapper
 │   ├── graph/             graph algorithms
 │   ├── search/            bleve wrapper
-│   ├── ts/                tstorage wrapper
-│   └── server/            HTTP API handlers
+│   └── ts/                tstorage wrapper
 ├── skills/                AI Agent skill definitions
-├── web/                   Web frontend (Vite + React)
 ├── build.sh / build.ps1   build with version injection
 └── data/                  runtime storage (gitignored)
 ```

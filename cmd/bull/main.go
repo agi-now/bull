@@ -26,7 +26,6 @@ func init() {
 		graphCmd(),
 		searchCmd(),
 		tsCmd(),
-		serveCmd(),
 		versionCmd(),
 		infoCmd(),
 	)
