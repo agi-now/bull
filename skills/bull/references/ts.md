@@ -35,18 +35,27 @@ bull ts query monitoring cpu_usage --from 1700000000 --to 1700003600 --label hos
 bull ts latest <db> <metric> [--label key=value ...] [--format table|json]
 ```
 Get the most recent data point.
+```bash
+bull ts latest monitoring cpu_usage --label host=server1 --format json
+```
 
 ### count
 ```
 bull ts count <db> <metric> [--from <unix>] [--to <unix>] [--label key=value ...]
 ```
 Count data points in a time range. Single integer.
+```bash
+bull ts count monitoring cpu_usage --from 1700000000 --to 1700003600 --label host=server1
+```
 
 ### export
 ```
 bull ts export <db> <metric> [--from <unix>] [--to <unix>] [--label key=value ...] [-o <file>]
 ```
 Export as CSV (`timestamp,value`).
+```bash
+bull ts export monitoring cpu_usage --label host=server1 -o cpu_report.csv
+```
 
 ### drop
 ```
@@ -61,6 +70,8 @@ bull ts dbs
 List all time-series databases.
 
 ## HTTP API Endpoints
+
+Fields ending with `?` are optional. CLI-only commands not available via HTTP: `bulk`.
 
 | Method | Path | Body |
 |--------|------|------|

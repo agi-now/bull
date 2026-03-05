@@ -103,6 +103,8 @@ List all SQL databases.
 
 ## HTTP API Endpoints
 
+Fields ending with `?` are optional. CLI-only commands not available via HTTP: `exec-file`, `import`, `import-json`, `import-ndjson`, `export`, `shell`.
+
 | Method | Path | Body |
 |--------|------|------|
 | GET | `/api/sql/dbs` | — |

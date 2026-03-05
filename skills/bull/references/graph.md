@@ -29,12 +29,18 @@ bull graph add-edge deps svc-auth svc-db --weight 5
 bull graph del-vertex <db> <id> [--undirected]
 ```
 Remove a vertex (must have no edges).
+```bash
+bull graph del-vertex deps svc-cache
+```
 
 ### del-edge
 ```
 bull graph del-edge <db> <from> <to> [--undirected]
 ```
 Remove an edge.
+```bash
+bull graph del-edge deps svc-auth svc-db
+```
 
 ### vertices
 ```
@@ -104,6 +110,9 @@ Show vertex and edge counts.
 bull graph components <db> [--undirected]
 ```
 Find connected components (SCC for directed, BFS for undirected).
+```bash
+bull graph components social --undirected
+```
 
 ### toposort
 ```
@@ -146,6 +155,8 @@ List all graph files.
 
 ## HTTP API Endpoints
 
+Fields ending with `?` are optional. CLI-only commands not available via HTTP: `import-csv`.
+
 | Method | Path | Body |
 |--------|------|------|
 | GET | `/api/graph/dbs` | — |
@@ -164,7 +175,7 @@ List all graph files.
 | POST | `/api/graph/{db}/bfs` | `{"start","undirected?"}` |
 | POST | `/api/graph/{db}/stats` | `{"undirected?"}` |
 | POST | `/api/graph/{db}/components` | `{"undirected?"}` |
-| POST | `/api/graph/{db}/toposort` | `{"undirected?"}` |
-| POST | `/api/graph/{db}/has-cycle` | `{"undirected?"}` |
+| POST | `/api/graph/{db}/toposort` | — |
+| POST | `/api/graph/{db}/has-cycle` | — |
 | POST | `/api/graph/{db}/export` | `{"undirected?"}` |
 | DELETE | `/api/graph/{db}` | — |

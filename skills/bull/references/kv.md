@@ -89,6 +89,9 @@ bull kv incr counters page_views
 bull kv decr <db> <key> [delta] [--bucket <name>]
 ```
 Atomically decrement. Default delta=1. Prints the new value.
+```bash
+bull kv decr counters page_views 5
+```
 
 ### buckets
 ```
@@ -127,6 +130,8 @@ bull kv dbs
 List all KV databases. One name per line.
 
 ## HTTP API Endpoints
+
+Fields ending with `?` are optional. CLI-only commands not available via HTTP: `decr`.
 
 | Method | Path | Body |
 |--------|------|------|

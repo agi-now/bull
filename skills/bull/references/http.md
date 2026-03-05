@@ -11,6 +11,8 @@ All responses are JSON:
 {"ok": false, "error": "..."}
 ```
 
+**Convention:** In request body descriptions, fields ending with `?` are optional.
+
 ## Global Endpoints
 
 | Method | Path | Description |

@@ -53,7 +53,12 @@ All commands accept:
 
 - Use `--format json` wherever available for machine-readable output
 - Mutation commands (put, del, add-vertex) produce no stdout on success, exit code 0
-- Errors go to stderr with non-zero exit code
+- Errors go to stderr with non-zero exit code. Examples:
+  ```
+  Error: key "session_token" not found in bucket "default"
+  Error: index "articles" does not exist
+  Error: vertex "svc-unknown" not found in graph "deps"
+  ```
 
 ## HTTP API Mode
 

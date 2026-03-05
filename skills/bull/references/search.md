@@ -41,18 +41,27 @@ bull search query articles "title:kubernetes" --field title --field author --lim
 bull search get <index> <docID>
 ```
 Retrieve a document by ID with all stored fields.
+```bash
+bull search get articles doc1
+```
 
 ### update
 ```
 bull search update <index> <docID> <json>
 ```
 Re-index (replace) a document.
+```bash
+bull search update articles doc1 '{"title":"Hello Updated","body":"New content"}'
+```
 
 ### delete
 ```
 bull search delete <index> <docID>
 ```
 Delete a document by ID.
+```bash
+bull search delete articles doc1
+```
 
 ### info
 ```
@@ -73,6 +82,8 @@ bull search dbs
 List all search indexes.
 
 ## HTTP API Endpoints
+
+Fields ending with `?` are optional. CLI-only commands not available via HTTP: `bulk`.
 
 | Method | Path | Body |
 |--------|------|------|
