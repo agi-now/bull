@@ -1,6 +1,6 @@
 module github.com/agi-now/bull
 
-go 1.25.0
+go 1.26.0
 
 require (
 	github.com/dominikbraun/graph v0.23.0

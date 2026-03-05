@@ -1,7 +1,7 @@
 ---
 name: bull
 description: "Micro data environment in a single ~8MB binary — KV store, SQL database, graph analysis, full-text search, and time-series storage, all out of the box. No servers to install, no dependencies to manage. TRIGGER when: user needs local data storage, CSV/JSON analysis, graph traversal, full-text search, metrics recording, persistent state between agent steps, or building data pipelines. CLI-driven, scriptable, pipe-friendly."
-license: Apache-2.0
+license: MIT
 compatibility: "Requires the bull binary in PATH. Supports linux/amd64, linux/arm64, darwin/amd64, darwin/arm64, windows/amd64."
 repository: https://github.com/agi-now/bull
 install:
