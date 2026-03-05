@@ -9,7 +9,7 @@ New-Item -ItemType Directory -Force -Path $OutDir | Out-Null
 
 Write-Host "Building bull $Version ..."
 
-go build -ldflags="$LDFlags" -o "$OutDir/bull.exe" ./cmd/bull/
+go build -trimpath -ldflags="$LDFlags" -o "$OutDir/bull.exe" ./cmd/bull/
 Write-Host "  -> $OutDir/bull.exe"
 
 # Cross compile (set $env:CROSS = "1" to enable)
@@ -26,7 +26,7 @@ if ($env:CROSS -eq "1") {
         Write-Host "  building $($t.os)/$($t.arch) ..."
         $env:GOOS = $t.os
         $env:GOARCH = $t.arch
-        go build -ldflags="$LDFlags" -o $output ./cmd/bull/
+        go build -trimpath -ldflags="$LDFlags" -o $output ./cmd/bull/
         Write-Host "  -> $output"
     }
     Remove-Item Env:\GOOS -ErrorAction SilentlyContinue
