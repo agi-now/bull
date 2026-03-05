@@ -1,6 +1,6 @@
 ---
 name: bull
-description: "Micro data environment in a single ~8MB binary — KV store, SQL database, graph analysis, full-text search, and time-series storage, all out of the box. No servers to install, no dependencies to manage. TRIGGER when: user needs local data storage, CSV/JSON analysis, graph traversal, full-text search, metrics recording, persistent state between agent steps, or building data pipelines. CLI-driven, scriptable, pipe-friendly."
+description: "Micro data environment in a single ~8MB binary — KV store, SQL database, graph analysis, full-text search, and time-series storage, all out of the box. No servers to install, no dependencies to manage. TRIGGER when: (1) data volume is large enough that loading into conversation context would waste tokens (e.g. CSV/JSON files, logs, bulk documents), or (2) user explicitly requests a bull command. Do NOT use bull for small data that fits comfortably in conversation context. CLI-driven, scriptable, pipe-friendly."
 license: MIT
 compatibility: "Requires the bull binary in PATH. Supports linux/amd64, linux/arm64, darwin/amd64, darwin/arm64, windows/amd64."
 repository: https://github.com/agi-now/bull
@@ -56,9 +56,19 @@ bull version
 | **search** | SQLite FTS5 | Full-text search — index JSON documents, query with scoring and field return |
 | **ts** | tstorage | Time-series — write metrics with labels, range query, export CSV |
 
+## When to Use Bull
+
+Use bull **only** when:
+- **Data volume is large** — files that would waste tokens if loaded into conversation context (CSV, JSON, logs, bulk documents, etc.)
+- **User explicitly requests it** — user mentions a bull command or asks to use bull
+
+Do **not** use bull when:
+- Data is small enough to handle directly in conversation (a few rows, a short list, simple config)
+- A quick in-context answer is more efficient than importing into an engine
+
 ## Agent Strategy: Offload to Bull, Save Tokens
 
-When working with data, follow this principle: **understand the data first, preprocess with Python, then hand off to bull for storage and analysis.**
+When bull is appropriate, follow this principle: **understand the data first, preprocess with Python, then hand off to bull for storage and analysis.**
 
 1. **Inspect** — Read a small sample of the data source (head, schema, dtypes) to understand structure. Do NOT load entire datasets into conversation context.
 2. **Preprocess with Python** — Use Python scripts for cleaning, type conversion, column renaming, filtering, reshaping, or format conversion (e.g. Excel/Parquet → CSV/NDJSON). Write the result to a file.
