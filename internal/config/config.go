@@ -5,7 +5,7 @@ import (
 	"path/filepath"
 )
 
-var DataDir = "./data"
+var DataDir = "./bull_data"
 
 func SubDir(sub string) string {
 	dir := filepath.Join(DataDir, sub)

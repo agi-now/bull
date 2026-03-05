@@ -143,15 +143,15 @@ Skill files are automatically downloaded by the AI Agent when it installs Bull. 
 
 ## Data Storage
 
-All data persists under `--data-dir` (default `./data`), organized by engine:
+All data persists under `--data-dir` (default `./bull_data`), organized by engine:
 
 | Engine | Location | Format |
 |--------|----------|--------|
-| KV | `data/kv/<name>.db` | bbolt B+tree |
-| SQL | `data/sql/<name>.db` | SQLite |
-| Graph | `data/graph/<name>.json` | JSON |
-| Search | `data/search/<name>.db` | SQLite FTS5 |
-| TS | `data/ts/<name>/` | tstorage WAL |
+| KV | `bull_data/kv/<name>.db` | bbolt B+tree |
+| SQL | `bull_data/sql/<name>.db` | SQLite |
+| Graph | `bull_data/graph/<name>.json` | JSON |
+| Search | `bull_data/search/<name>.db` | SQLite FTS5 |
+| TS | `bull_data/ts/<name>/` | tstorage WAL |
 
 ## License
 

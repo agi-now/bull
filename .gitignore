@@ -4,7 +4,7 @@ bin/
 /bull.exe
 
 # Runtime data
-data/
+bull_data/
 
 # Go
 *.dll

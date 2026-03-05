@@ -92,7 +92,7 @@ This keeps token usage minimal: Python handles the heavy byte-level work offline
 ## Global Flags
 
 All commands accept:
-- `--data-dir <path>` — Override data directory (default: `./data`)
+- `--data-dir <path>` — Override data directory (default: `./bull_data`)
 
 ## Output Conventions
 
@@ -173,4 +173,4 @@ For the complete command list of each engine, read the corresponding reference f
 - SQL import auto-creates tables with TEXT columns; cast in queries for numeric comparison
 - Search index must be created (`bull search create`) before indexing documents
 - TS timestamps are Unix seconds; `--from`/`--to` default to last 1 hour if omitted
-- All data persists under `--data-dir` (default `./data`) with per-engine subdirectories
+- All data persists under `--data-dir` (default `./bull_data`) with per-engine subdirectories

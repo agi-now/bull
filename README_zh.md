@@ -143,15 +143,15 @@ bull ─┬─ kv ─────┬─ put / get / del          单键操作
 
 ## 数据持久化
 
-所有数据持久化在 `--data-dir`（默认 `./data`）下，按引擎分目录存储：
+所有数据持久化在 `--data-dir`（默认 `./bull_data`）下，按引擎分目录存储：
 
 | 引擎 | 路径 | 格式 |
 |------|------|------|
-| KV | `data/kv/<name>.db` | bbolt B+tree |
-| SQL | `data/sql/<name>.db` | SQLite |
-| Graph | `data/graph/<name>.json` | JSON |
-| Search | `data/search/<name>.db` | SQLite FTS5 |
-| TS | `data/ts/<name>/` | tstorage WAL |
+| KV | `bull_data/kv/<name>.db` | bbolt B+tree |
+| SQL | `bull_data/sql/<name>.db` | SQLite |
+| Graph | `bull_data/graph/<name>.json` | JSON |
+| Search | `bull_data/search/<name>.db` | SQLite FTS5 |
+| TS | `bull_data/ts/<name>/` | tstorage WAL |
 
 ## 开源协议
 
