@@ -68,17 +68,3 @@ Delete a time-series database.
 bull ts dbs
 ```
 List all time-series databases.
-
-## HTTP API Endpoints
-
-Fields ending with `?` are optional. CLI-only commands not available via HTTP: `bulk`.
-
-| Method | Path | Body |
-|--------|------|------|
-| GET | `/api/ts/dbs` | — |
-| POST | `/api/ts/{db}/write` | `{"metric","value","timestamp?","labels?"}` |
-| POST | `/api/ts/{db}/query` | `{"metric","from?","to?","labels?"}` |
-| POST | `/api/ts/{db}/latest` | `{"metric","labels?"}` |
-| POST | `/api/ts/{db}/count` | `{"metric","from?","to?","labels?"}` |
-| POST | `/api/ts/{db}/export` | `{"metric","from?","to?","labels?"}` (returns CSV) |
-| DELETE | `/api/ts/{db}` | — |

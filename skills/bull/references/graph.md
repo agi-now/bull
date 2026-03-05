@@ -152,30 +152,3 @@ Delete a graph file.
 bull graph dbs
 ```
 List all graph files.
-
-## HTTP API Endpoints
-
-Fields ending with `?` are optional. CLI-only commands not available via HTTP: `import-csv`.
-
-| Method | Path | Body |
-|--------|------|------|
-| GET | `/api/graph/dbs` | — |
-| POST | `/api/graph/{db}/add-vertex` | `{"id","attrs?","undirected?"}` |
-| POST | `/api/graph/{db}/add-edge` | `{"from","to","weight?","attrs?","undirected?"}` |
-| POST | `/api/graph/{db}/del-vertex` | `{"id","undirected?"}` |
-| POST | `/api/graph/{db}/del-edge` | `{"from","to","undirected?"}` |
-| POST | `/api/graph/{db}/vertices` | `{"undirected?"}` |
-| POST | `/api/graph/{db}/edges` | `{"undirected?"}` |
-| POST | `/api/graph/{db}/neighbors` | `{"id","undirected?"}` |
-| POST | `/api/graph/{db}/degree` | `{"id","undirected?"}` |
-| POST | `/api/graph/{db}/attrs` | `{"id","undirected?"}` |
-| POST | `/api/graph/{db}/shortest-path` | `{"from","to","undirected?"}` |
-| POST | `/api/graph/{db}/has-path` | `{"from","to","undirected?"}` |
-| POST | `/api/graph/{db}/dfs` | `{"start","undirected?"}` |
-| POST | `/api/graph/{db}/bfs` | `{"start","undirected?"}` |
-| POST | `/api/graph/{db}/stats` | `{"undirected?"}` |
-| POST | `/api/graph/{db}/components` | `{"undirected?"}` |
-| POST | `/api/graph/{db}/toposort` | — |
-| POST | `/api/graph/{db}/has-cycle` | — |
-| POST | `/api/graph/{db}/export` | `{"undirected?"}` |
-| DELETE | `/api/graph/{db}` | — |

@@ -128,26 +128,3 @@ Delete a bucket from a database.
 bull kv dbs
 ```
 List all KV databases. One name per line.
-
-## HTTP API Endpoints
-
-Fields ending with `?` are optional. CLI-only commands not available via HTTP: `decr`.
-
-| Method | Path | Body |
-|--------|------|------|
-| GET | `/api/kv/dbs` | — |
-| POST | `/api/kv/{db}/put` | `{"key","value","bucket?"}` |
-| POST | `/api/kv/{db}/get` | `{"key","bucket?"}` |
-| POST | `/api/kv/{db}/del` | `{"key","bucket?"}` |
-| POST | `/api/kv/{db}/mget` | `{"keys":[],"bucket?"}` |
-| POST | `/api/kv/{db}/mput` | `{"pairs":[],"bucket?"}` |
-| POST | `/api/kv/{db}/list` | `{"prefix?","bucket?"}` |
-| POST | `/api/kv/{db}/scan` | `{"start?","end?","bucket?"}` |
-| POST | `/api/kv/{db}/exists` | `{"key","bucket?"}` |
-| POST | `/api/kv/{db}/count` | `{"bucket?"}` |
-| POST | `/api/kv/{db}/incr` | `{"key","delta?","bucket?"}` |
-| GET | `/api/kv/{db}/buckets` | — |
-| POST | `/api/kv/{db}/export` | `{"bucket?"}` |
-| POST | `/api/kv/{db}/import` | `{"pairs":[],"bucket?"}` |
-| DELETE | `/api/kv/{db}` | — |
-| POST | `/api/kv/{db}/drop-bucket` | `{"bucket"}` |

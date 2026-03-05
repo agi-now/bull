@@ -100,18 +100,3 @@ Delete a database file.
 bull sql dbs
 ```
 List all SQL databases.
-
-## HTTP API Endpoints
-
-Fields ending with `?` are optional. CLI-only commands not available via HTTP: `exec-file`, `import`, `import-json`, `import-ndjson`, `export`, `shell`.
-
-| Method | Path | Body |
-|--------|------|------|
-| GET | `/api/sql/dbs` | — |
-| POST | `/api/sql/{db}/exec` | `{"sql"}` |
-| POST | `/api/sql/{db}/query` | `{"sql","limit?"}` |
-| GET | `/api/sql/{db}/tables` | — |
-| GET | `/api/sql/{db}/schema/{table}` | — |
-| GET | `/api/sql/{db}/describe/{table}` | — |
-| GET | `/api/sql/{db}/count/{table}` | — |
-| DELETE | `/api/sql/{db}` | — |

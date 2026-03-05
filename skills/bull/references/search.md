@@ -80,19 +80,3 @@ Delete an entire search index.
 bull search dbs
 ```
 List all search indexes.
-
-## HTTP API Endpoints
-
-Fields ending with `?` are optional. CLI-only commands not available via HTTP: `bulk`.
-
-| Method | Path | Body |
-|--------|------|------|
-| GET | `/api/search/dbs` | — |
-| POST | `/api/search/{idx}/create` | — |
-| POST | `/api/search/{idx}/index` | `{"id","doc"}` |
-| POST | `/api/search/{idx}/query` | `{"query","limit?","offset?","fields?"}` |
-| GET | `/api/search/{idx}/get/{docID}` | — |
-| POST | `/api/search/{idx}/update` | `{"id","doc"}` |
-| DELETE | `/api/search/{idx}/doc/{docID}` | — |
-| GET | `/api/search/{idx}/info` | — |
-| DELETE | `/api/search/{idx}` | — |
