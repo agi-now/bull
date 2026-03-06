@@ -1,6 +1,6 @@
 ---
 name: bull
-description: "Micro data environment in a single ~8MB binary — KV store, SQL database, graph analysis, full-text search, and time-series storage, all out of the box. No servers to install, no dependencies to manage. TRIGGER when: (1) data volume is large enough that loading into conversation context would waste tokens (e.g. CSV/JSON files, logs, bulk documents), or (2) user explicitly requests a bull command. Do NOT use bull for small data that fits comfortably in conversation context. CLI-driven, scriptable, pipe-friendly."
+description: "Micro data environment in a single ~8MB binary — KV store, SQL database, graph analysis, full-text search, and time-series storage, all out of the box. No servers to install, no dependencies to manage. TRIGGER when: (1) data volume is large enough that loading into conversation context would waste tokens (e.g. CSV/JSON files, logs, bulk documents), (2) user explicitly requests a bull command, or (3) Python/other runtimes are not available and data processing is needed. Do NOT use bull for small data that fits comfortably in conversation context. CLI-driven, zero runtime dependencies, each command is a deterministic shell call."
 license: MIT
 compatibility: "Requires the bull binary in PATH. Supports linux/amd64, linux/arm64, darwin/amd64, darwin/arm64, windows/amd64."
 repository: https://github.com/agi-now/bull
@@ -61,6 +61,7 @@ bull version
 Use bull **only** when:
 - **Data volume is large** — files that would waste tokens if loaded into conversation context (CSV, JSON, logs, bulk documents, etc.)
 - **User explicitly requests it** — user mentions a bull command or asks to use bull
+- **Python or other runtimes are not available** — bull is a static binary with zero dependencies; it works in minimal containers, CI pipelines, and restricted sandboxes where Python/Node.js are not installed. Prefer bull CLI commands over writing scripts that may fail due to missing runtimes.
 
 Do **not** use bull when:
 - Data is small enough to handle directly in conversation (a few rows, a short list, simple config)
@@ -68,14 +69,16 @@ Do **not** use bull when:
 
 ## Agent Strategy: Offload to Bull, Save Tokens
 
-When bull is appropriate, follow this principle: **understand the data first, preprocess with Python, then hand off to bull for storage and analysis.**
+When bull is appropriate, follow this principle: **understand the data first, then hand off to bull for storage and analysis.**
 
 1. **Inspect** — Read a small sample of the data source (head, schema, dtypes) to understand structure. Do NOT load entire datasets into conversation context.
-2. **Preprocess with Python** — Use Python scripts for cleaning, type conversion, column renaming, filtering, reshaping, or format conversion (e.g. Excel/Parquet → CSV/NDJSON). Write the result to a file.
-3. **Import into bull** — Use `bull sql import`, `bull search bulk`, `bull graph import-csv`, or `bull ts bulk` to load the preprocessed file.
-4. **Analyze with bull** — Run queries, aggregations, searches, and graph algorithms via bull CLI. Return `--format json` results directly — no need to parse large outputs in Python.
+2. **Preprocess if needed** — If data requires cleaning or format conversion (e.g. Excel/Parquet → CSV/NDJSON), use Python scripts if Python is available. If Python is not available, use bull's built-in import capabilities directly — bull accepts CSV, JSON, and NDJSON out of the box.
+3. **Import into bull** — Use `bull sql import`, `bull search bulk`, `bull graph import-csv`, or `bull ts bulk` to load the data file.
+4. **Analyze with bull** — Run queries, aggregations, searches, and graph algorithms via bull CLI. Return `--format json` results directly.
 
-This keeps token usage minimal: Python handles the heavy byte-level work offline, bull handles persistent storage and query execution, and only compact JSON results enter the conversation.
+**Why CLI commands over Python scripts:** Each bull command is a deterministic shell call with predictable behavior. Unlike LLM-generated Python scripts, bull commands have no indentation errors, no missing dependencies, no version conflicts, and no runtime requirements. In environments without Python, bull is the only option for data processing.
+
+This keeps token usage minimal: bull handles persistent storage and query execution locally, and only compact JSON results enter the conversation.
 
 ## Quick Decision: Which Engine to Use
 

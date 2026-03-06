@@ -32,9 +32,9 @@ With Bull:     User → Agent → bull sql import + query → LLM → answer   (
 ## Why Bull?
 
 - **Slash token costs** — data stays local, only query results enter the conversation. Process millions of rows without burning tokens on raw data.
-- **Single binary, zero dependencies** — no database servers to install, no runtime to configure. Copy one file and you're done.
+- **Single binary, zero dependencies** — no database servers to install, no runtime to configure. Copy one file and you're done. Works in environments where Python or other runtimes are not available (minimal containers, CI pipelines, restricted sandboxes).
 - **5 engines, 72+ commands** — KV, SQL, Graph, Full-text Search, Time-Series — covers the vast majority of data processing scenarios an AI Agent would encounter.
-- **CLI first** — every engine is accessible via straightforward command-line interface, making it easy to integrate with any language or framework.
+- **CLI first** — every command is a deterministic shell call. No script to write, no indentation errors, no dependency conflicts. More reliable than LLM-generated Python scripts.
 - **AI-Agent native** — ships with machine-readable skill definitions in `skills/`, enabling AI Agents to autonomously decide which engine and command to use.
 - **Pure Go, statically compiled** — no CGo, no shared libraries. Cross-compile for Linux / macOS / Windows with a single command.
 
